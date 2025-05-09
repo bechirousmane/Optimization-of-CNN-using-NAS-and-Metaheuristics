@@ -1,5 +1,5 @@
 import torch.nn as nn
-from search_spaces.genetic.searchSpaceConfig import Config
+from searchSpaceConfig import Config
 
 SIZE_INDIVIDUAL = 8
 
@@ -15,9 +15,9 @@ def encode_layer(layer:dict)->str:
     t = layer["type"]
     if t == "Conv":
         type_bits = "01"
-        nb_filters = Config.Config.FILTERS_MAP.index(layer['filters'])
+        nb_filters = Config.FILTERS_MAP.index(layer['filters'])
         kernel_size = Config.KERNEL_MAP.index(layer['kernel'])
-        stride = Config.Config.STRIDE_MAP.index(layer['stride'])
+        stride = Config.STRIDE_MAP.index(layer['stride'])
         params = f"{nb_filters:02b}{kernel_size:02b}{stride:02b}"
     elif t == "Pool":
         type_bits = "10"
@@ -27,7 +27,7 @@ def encode_layer(layer:dict)->str:
     elif t == "FC":
         type_bits = "11"
         layer_size = Config.FC_SIZES.index(layer['size'])
-        activation_function = Config.ACTIVATION_FUNCTIONS.index(layer['activation_function'])
+        activation_function = Config.ACTIVATION_FUNCTIONS.index(layer['activation'])
         params = f"{layer_size:04b}{activation_function:02b}"
     return type_bits + params
 
@@ -54,7 +54,7 @@ def decode_layer(bits:str)->dict:
         stride = Config.STRIDE_MAP[int(params[2:4], 2)]
         return {"type": "Pool", "kernel": kernel, "stride": stride}
     elif layer_type == "11":
-        size = Config.Config.FC_SIZES[int(params[:4], 2)]
+        size = Config.FC_SIZES[int(params[:4], 2)]
         activation = Config.ACTIVATION_FUNCTIONS[int(params[4:],2)]
         return {"type": "FC", "size": size, "activation":activation}
     return None
