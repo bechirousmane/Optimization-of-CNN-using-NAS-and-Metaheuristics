@@ -1,17 +1,19 @@
 import unittest
 import torch
 import torch.nn as nn
-from searchSpaceGA import (
+from .searchSpaceGA import (
     encode_layer, decode_layer, 
     architecture_to_binary, binary_to_architecture,
     is_valid_architecture, SIZE_INDIVIDUAL
 )
-from searchSpaceConfig import Config
-from geneticOperation import (
+from ..searchSpaceConfig import Config
+from .geneticOperation import (
     generate_valid_architecture,
-    build_torch_network
+    build_torch_network,
+    elitisteSelection,
+    polynomialRankSelection,
+    probabilisticTournamentSelection
 )
-
 
 class TestSearchSpaceFunctions(unittest.TestCase):
     
@@ -216,6 +218,191 @@ class TestSearchSpaceFunctions(unittest.TestCase):
         
         # Check output dimensions
         self.assertEqual(output.shape, (1, 10))
+
+    def setUp(self):
+        """
+        Prepare a consistent test dataset for selections tests
+        """
+        # Example population with different values
+        self.population = [
+            [1, 2, 3],    # Low fitness
+            [4, 5, 6],    # Medium fitness
+            [7, 8, 9],    # High fitness
+            [10, 11, 12], # Very high fitness
+            [13, 14, 15]  # Highest fitness
+        ]
+        
+        # Simple fitness function based on sum
+        def simple_fitness(individual, **kwargs):
+            return sum(individual)
+        
+        self.fitness_function = simple_fitness
+    
+    def test_elitist_selection_basic(self):
+        """
+        Basic test of elitist selection
+        """
+        # Select the 2 best architectures
+        selected = elitisteSelection(
+            self.population, 
+            self.fitness_function, 
+            nbr=2
+        )
+        
+        # Check that the correct number of individuals is selected
+        self.assertEqual(len(selected), 2)
+        
+        # Check that the best are selected
+        expected_best = [self.population[4], self.population[3]]
+        self.assertEqual(selected, expected_best)
+    
+    def test_elitist_selection_edge_cases(self):
+        """
+        Test edge cases for elitist selection
+        """
+        # Case where requested number is greater than population
+        full_population = elitisteSelection(
+            self.population, 
+            self.fitness_function, 
+            nbr=10
+        )
+        self.assertEqual(len(full_population), len(self.population))
+        
+        # Case with an empty population
+        empty_population = elitisteSelection(
+            [], 
+            self.fitness_function, 
+            nbr=2
+        )
+        self.assertEqual(len(empty_population), 0)
+    
+    # def test_polynomial_rank_selection_distribution(self):
+    #     """
+    #     Test the distribution of polynomial rank selection
+    #     """
+    #     # Number of repetitions to verify distribution
+    #     num_trials = 10000
+    #     selections = []
+        
+    #     for _ in range(num_trials):
+    #         selected = polynomialRankSelection(
+    #             self.population, 
+    #             self.fitness_function, 
+    #             nbr=1,
+    #             selective_pressure=1.5
+    #         )[0]
+    #         selections.append(selected)
+        
+    #     # Convert selections to indices to analyze distribution
+    #     selection_indices = [self.population.index(sel) for sel in selections]
+        
+    #     # Check that the distribution favors individuals with better fitness
+    #     # Last indices (best individuals) should appear more frequently
+    #     top_half_count = sum(1 for idx in selection_indices if idx >= len(self.population) // 2)
+        
+    #     # At least 60% of selections should come from the top half
+    #     self.assertGreater(top_half_count / num_trials, 0.6)
+    
+    def test_polynomial_rank_selection_parameters(self):
+        """
+        Test parameters of polynomial rank selection
+        """
+        # Test with different selection pressures
+        for pressure in [1.1, 1.5, 2.0]:
+            selected = polynomialRankSelection(
+                self.population, 
+                self.fitness_function, 
+                nbr=2,
+                selective_pressure=pressure
+            )
+            
+            # Check that the correct number of individuals is selected
+            self.assertEqual(len(selected), 2)
+    
+    def test_probabilistic_tournament_selection_distribution(self):
+        """
+        Test the distribution of probabilistic tournament selection
+        """
+        # Number of repetitions to verify distribution
+        num_trials = 10000
+        selections = []
+        
+        for _ in range(num_trials):
+            selected = probabilisticTournamentSelection(
+                self.population, 
+                self.fitness_function, 
+                nbr=1,
+                tournament_size=3,
+                tournament_prob=0.75
+            )[0]
+            selections.append(selected)
+        
+        # Convert selections to indices to analyze distribution
+        selection_indices = [self.population.index(sel) for sel in selections]
+        
+        # Check that the distribution favors individuals with better fitness
+        # Last indices (best individuals) should appear more frequently
+        top_half_count = sum(1 for idx in selection_indices if idx >= len(self.population) // 2)
+        
+        # At least 60% of selections should come from the top half
+        self.assertGreater(top_half_count / num_trials, 0.6)
+    
+    def test_probabilistic_tournament_selection_parameters(self):
+        """
+        Test parameters of probabilistic tournament selection
+        """
+        # Test with different tournament sizes
+        for tournament_size in [2, 3, 5]:
+            selected = probabilisticTournamentSelection(
+                self.population, 
+                self.fitness_function, 
+                nbr=2,
+                tournament_size=tournament_size,
+                tournament_prob=0.75
+            )
+            
+            # Check that the correct number of individuals is selected
+            self.assertEqual(len(selected), 2)
+        
+        # Test with different tournament probabilities
+        for tournament_prob in [0.5, 0.75, 0.9]:
+            selected = probabilisticTournamentSelection(
+                self.population, 
+                self.fitness_function, 
+                nbr=2,
+                tournament_size=3,
+                tournament_prob=tournament_prob
+            )
+            
+            # Check that the correct number of individuals is selected
+            self.assertEqual(len(selected), 2)
+    
+    def test_selection_methods_with_custom_fitness(self):
+        """
+        Test selection methods with a custom fitness function
+        """
+        # More complex fitness function
+        def complex_fitness(individual, weight=1.0, **kwargs):
+            return sum(individual) * weight
+        
+        # Test for each selection method
+        selection_methods = [
+            elitisteSelection,
+            polynomialRankSelection,
+            probabilisticTournamentSelection
+        ]
+        
+        for method in selection_methods:
+            selected = method(
+                self.population, 
+                complex_fitness,
+                nbr=2,
+                weight=1.5  # Custom parameter
+            )
+            
+            # Check that the correct number of individuals is selected
+            self.assertEqual(len(selected), 2)
+    
 
 
 if __name__ == '__main__':

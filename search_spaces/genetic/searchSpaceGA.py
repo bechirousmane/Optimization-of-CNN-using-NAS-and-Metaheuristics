@@ -1,5 +1,5 @@
 import torch.nn as nn
-from searchSpaceConfig import Config
+from ..searchSpaceConfig import Config
 
 SIZE_INDIVIDUAL = 8
 

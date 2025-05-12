@@ -1,0 +1,2 @@
+from ..searchSpaceConfig import Config
+
