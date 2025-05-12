@@ -61,7 +61,7 @@ def generate_valid_architecture()->list:
     return layers
 
 
-def onePointCrossover(parent1:str, parent2:str)-> tuple:
+def onePointCrossover(parent1:str, parent2:str)-> str:
     """
         Makes a one-point crossover of two parents.
         Params : 
@@ -69,11 +69,11 @@ def onePointCrossover(parent1:str, parent2:str)-> tuple:
             parent2 : str, binary string
         Return : str, binary string
     """
-    cut_off_point1 = random.randint(1, len(parent1)-1)
-    cut_off_point2 = random.randint(1, len(parent2)-1)
+    cut_off_point1 = random.choice([i for i in range(len(parent1)) if i % Config.CROMOSOME_SIZE==0])
+    cut_off_point2 = random.choice([i for i in range(len(parent2)) if i % Config.CROMOSOME_SIZE==0])
     child1 = parent1[:cut_off_point1] + parent2[cut_off_point2:]
     child2 = parent2[:cut_off_point2] + parent1[cut_off_point1:]
-    return child1, child2
+    return child1 if is_valid_architecture(child1) else child2
 
 def mutate(architecture:str, mutation_rate=0.1)->str:
     """
@@ -84,11 +84,10 @@ def mutate(architecture:str, mutation_rate=0.1)->str:
         Return : str, binary string
     """
     idx = list(range(len(architecture)))
-    print(idx)
     nb_bits_to_mutate = min(len(architecture)//3, random.randint(0, len(architecture)))
     idx_bits_to_mutate = random.sample(idx, nb_bits_to_mutate)
     for i in idx_bits_to_mutate:
-        if random.random() < mutation_rate:
+        if random.random() < mutation_rate and i%8 != 0:
             architecture = architecture[:i] + ('0' if architecture[i]=='1' else '1') + architecture[i+1:]
     return architecture
 
@@ -178,15 +177,16 @@ if __name__=="__main__" :
     arch1 = generate_valid_architecture()
     arch2 = generate_valid_architecture()
     child = onePointCrossover(architecture_to_binary(arch1), architecture_to_binary(arch2))
-    mutant = mutate(random.choice(child))
+    mutant = mutate(child)
 
     print("Parent 1 :\n", arch1,"\n")
     print("Parent 2 :\n", arch2,"\n")
-    print("Child after crossover :\n", f"{binary_to_architecture(child[0])}\n{binary_to_architecture(child[1])}","\n")
-    print("Child after mutation :\n", binary_to_architecture(mutant),"\n")
-    print("Binary string :\n", mutant,"\n")
+    print("Child after crossover :\n", f"{binary_to_architecture(child)}\n")
+    print("Child after mutation :\n", f"{binary_to_architecture(mutant)}\n")
+    print("Binary string :\n", f"{mutant}\n")
     net = build_torch_network(mutant, input_shape=(3,32,32), num_classes=10)
     print(net)
+    #print(net)
     print(is_valid_architecture(binary_to_architecture(mutant)))
 
 

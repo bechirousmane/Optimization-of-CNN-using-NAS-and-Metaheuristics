@@ -10,3 +10,4 @@ class Config :
     FC_SIZES = [8, 16, 24, 32, 48, 64, 80, 96, 112, 128, 160, 192, 224, 256, 384, 512]
     MAX_LAYERS = 15
     MIN_LAYERS = 2
+    CROMOSOME_SIZE = 8
