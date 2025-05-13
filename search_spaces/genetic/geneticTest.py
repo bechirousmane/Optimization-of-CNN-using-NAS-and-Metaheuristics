@@ -3,8 +3,8 @@ import torch
 import torch.nn as nn
 from .searchSpaceGA import (
     encode_layer, decode_layer, 
-    architecture_to_binary, binary_to_architecture,
-    is_valid_architecture, SIZE_INDIVIDUAL
+    architecture_to_binary, binary_to_architecture, 
+    SIZE_INDIVIDUAL
 )
 from ..searchSpaceConfig import Config
 from .geneticOperation import (
@@ -15,7 +15,9 @@ from .geneticOperation import (
     probabilisticTournamentSelection
 )
 
-class TestSearchSpaceFunctions(unittest.TestCase):
+from ..utils import *
+
+class TestGeneticSearchSpaceFunctions(unittest.TestCase):
     
     def test_encode_decode_layer_conv(self):
         """Test encoding and decoding a Conv layer"""
@@ -207,7 +209,7 @@ class TestSearchSpaceFunctions(unittest.TestCase):
         ])
         
         # Build network with default CIFAR-10 dimensions
-        net = build_torch_network(arch_binary, input_shape=(3, 32, 32), num_classes=10)
+        net = build_torch_network(binary_to_architecture(arch_binary), input_shape=(3, 32, 32), num_classes=10)
         
         # Check that the network is a sequential model
         self.assertIsInstance(net, nn.Sequential)

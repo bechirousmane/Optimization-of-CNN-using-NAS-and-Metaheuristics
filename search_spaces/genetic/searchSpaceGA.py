@@ -84,41 +84,4 @@ def binary_to_architecture(binary_string):
             layers.append(layer)
     return layers
 
-def is_valid_architecture(layers:list)->bool:
-    """
-        Check if the architecture is valide
-        Params :
-           layers : list of dict
-        Return : bool 
-    """
-    if not layers or len(layers) < Config.MIN_LAYERS or len(layers) > Config.MAX_LAYERS:
-        return False
-    if any(layer is None for layer in layers):
-        return False
-    # First layer will be Convolution layer
-    if layers[0]["type"] != "Conv":
-        return False
-    # Last layer will be fully connected layer and at least one FC required
-    last_fc_index = None
-    for i, layer in enumerate(layers):
-        if layer["type"] == "FC":
-            last_fc_index = i
-            break
-    if last_fc_index is None:
-        return False
-    
-    # All layers from last_fc_index must be FC
-    for l in layers[last_fc_index:]:
-        if l["type"] != "FC":
-            return False
-    # Banned Pool or FC in first layer
-    if layers[0]["type"] in ["Pool", "FC"]:
-        return False
-    
-    # No Pool followed by Pool
-    for i in range(len(layers) - 1):
-        if layers[i]["type"] == "Pool" and layers[i+1]["type"] == "Pool":
-            return False
-    return True
-
 

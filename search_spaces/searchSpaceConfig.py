@@ -1,7 +1,7 @@
 import torch.nn as nn
 
 class Config :
-    FILTERS_MAP = [16, 32, 64, 128]
+    FILTERS_MAP = [8, 16, 32, 64]
     KERNEL_MAP = [3, 5, 7, 9]
     STRIDE_MAP = [1, 2, 3, 4]
     CONV_PADDING = 1
