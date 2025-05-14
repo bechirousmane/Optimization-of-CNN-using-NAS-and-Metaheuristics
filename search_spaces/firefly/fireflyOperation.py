@@ -6,7 +6,7 @@ from ..utils import *
 def euclideanDistance(vector1:np.array, vector2:np.array)->float :
     """
     Compute the euclidean distance between ~~vector1~~ and ~~vector2~~.
-    Params :
+    Args :
         vector1 : np.array,
         vector2 : np.array
     Return :
@@ -17,7 +17,7 @@ def euclideanDistance(vector1:np.array, vector2:np.array)->float :
 def attractivenessFirfly(beta0:float, gamma:float, distance:float) -> float :
     """
         calculates the distance between two fireflies based on their distance
-        Params :
+        Args :
             beta0 : float, the attractiveness at distance zero,
             gamma : float, the lighr absorption coefficient
             distance : float, the distance between the two fireflies
@@ -29,7 +29,7 @@ def attractivenessFirfly(beta0:float, gamma:float, distance:float) -> float :
 def moveFirefly(alpha:float, beta0:float, gamma:float, firefly:np.array, brightest_firefly:np.array)->np.array :
     """
         Move a firefly towards the brightest firefly.
-        Params :
+        Args :
             alpha : float, control parameter
             beta0 : float, the attractiveness at distance zero,
             gamma : float, the lighr absorption coefficient
@@ -53,7 +53,7 @@ def moveFirefly(alpha:float, beta0:float, gamma:float, firefly:np.array, brighte
 def validateFirefly(firefly:np.array)->np.array:
     """
     Ensure that the firefly represents a valid architecture in the search space.
-    Params:
+    Args:
         firefly: np.array, the firefly vector to validate
     Return:
         np.array, a validated firefly vector
@@ -130,7 +130,7 @@ def validateFirefly(firefly:np.array)->np.array:
 def initializeFireflyPopulation(population_size:int)->list:
     """
     Initialize a population of fireflies with random valid architectures.
-    Params:
+    Args:
         population_size: int, the number of fireflies to generate
     Return:
         list of np.array, the population of fireflies

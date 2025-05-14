@@ -61,7 +61,7 @@ def generate_valid_architecture()->list:
 def is_valid_architecture(layers:list)->bool:
     """
         Check if the architecture is valide
-        Params :
+        Args :
            layers : list of dict
         Return : bool 
     """
@@ -98,7 +98,7 @@ def is_valid_architecture(layers:list)->bool:
 def build_torch_network(arch:list, input_shape=(3, 32, 32), num_classes=10):
     """
     Takes a bit string and generates a corresponding nn.Sequential.
-    Params :
+    Args :
         input_shape: tuple, (channels, height, width)
         num_classes: int, Number of outputs from the last FC
     Return : nn.Sequential

@@ -239,15 +239,18 @@ class TestGeneticSearchSpaceFunctions(unittest.TestCase):
             return sum(individual)
         
         self.fitness_function = simple_fitness
+        self.fitness_score = [(individual,self.fitness_function(individual)) for individual in self.population]
+
     
     def test_elitist_selection_basic(self):
         """
         Basic test of elitist selection
         """
+        
         # Select the 2 best architectures
         selected = elitisteSelection(
             self.population, 
-            self.fitness_function, 
+            self.fitness_score, 
             nbr=2
         )
         
@@ -265,7 +268,7 @@ class TestGeneticSearchSpaceFunctions(unittest.TestCase):
         # Case where requested number is greater than population
         full_population = elitisteSelection(
             self.population, 
-            self.fitness_function, 
+            self.fitness_score, 
             nbr=10
         )
         self.assertEqual(len(full_population), len(self.population))
@@ -273,7 +276,7 @@ class TestGeneticSearchSpaceFunctions(unittest.TestCase):
         # Case with an empty population
         empty_population = elitisteSelection(
             [], 
-            self.fitness_function, 
+            [], 
             nbr=2
         )
         self.assertEqual(len(empty_population), 0)
@@ -289,7 +292,7 @@ class TestGeneticSearchSpaceFunctions(unittest.TestCase):
     #     for _ in range(num_trials):
     #         selected = polynomialRankSelection(
     #             self.population, 
-    #             self.fitness_function, 
+    #             self.fitness_scores, 
     #             nbr=1,
     #             selective_pressure=1.5
     #         )[0]
@@ -313,7 +316,7 @@ class TestGeneticSearchSpaceFunctions(unittest.TestCase):
         for pressure in [1.1, 1.5, 2.0]:
             selected = polynomialRankSelection(
                 self.population, 
-                self.fitness_function, 
+                self.fitness_score, 
                 nbr=2,
                 selective_pressure=pressure
             )
@@ -332,7 +335,7 @@ class TestGeneticSearchSpaceFunctions(unittest.TestCase):
         for _ in range(num_trials):
             selected = probabilisticTournamentSelection(
                 self.population, 
-                self.fitness_function, 
+                self.fitness_score, 
                 nbr=1,
                 tournament_size=3,
                 tournament_prob=0.75
@@ -357,7 +360,7 @@ class TestGeneticSearchSpaceFunctions(unittest.TestCase):
         for tournament_size in [2, 3, 5]:
             selected = probabilisticTournamentSelection(
                 self.population, 
-                self.fitness_function, 
+                self.fitness_score, 
                 nbr=2,
                 tournament_size=tournament_size,
                 tournament_prob=0.75
@@ -370,7 +373,7 @@ class TestGeneticSearchSpaceFunctions(unittest.TestCase):
         for tournament_prob in [0.5, 0.75, 0.9]:
             selected = probabilisticTournamentSelection(
                 self.population, 
-                self.fitness_function, 
+                self.fitness_score, 
                 nbr=2,
                 tournament_size=3,
                 tournament_prob=tournament_prob
@@ -386,6 +389,7 @@ class TestGeneticSearchSpaceFunctions(unittest.TestCase):
         # More complex fitness function
         def complex_fitness(individual, weight=1.0, **kwargs):
             return sum(individual) * weight
+        self.fitness_score = [(individual,complex_fitness(individual)) for individual in self.population]
         
         # Test for each selection method
         selection_methods = [
@@ -397,7 +401,7 @@ class TestGeneticSearchSpaceFunctions(unittest.TestCase):
         for method in selection_methods:
             selected = method(
                 self.population, 
-                complex_fitness,
+                self.fitness_score,
                 nbr=2,
                 weight=1.5  # Custom parameter
             )

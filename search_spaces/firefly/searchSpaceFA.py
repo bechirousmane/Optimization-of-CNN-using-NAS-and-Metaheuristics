@@ -15,7 +15,7 @@ LAYER_SIZE = 4
 def architecture_to_vector(arch:list[dict])->np.array : 
     """
         Convert the architecture ~~arch~~ to numpy array.
-        Params : 
+        Args : 
             acrh : list, the list that contains the architecture layers.
         Return : np.array
             Encoding the architecture as numpy array.
@@ -45,7 +45,7 @@ def architecture_to_vector(arch:list[dict])->np.array :
 def vector_to_achitecture(vector:np.array)->list :
     """
     Convert the vector ~~vector~~ to architecture as list of dictionnary.
-    Params :
+    Arg :
         vector : np.array, 
     Return: list
         The architecture of CNN as list of dictionnary

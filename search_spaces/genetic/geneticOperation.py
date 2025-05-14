@@ -5,12 +5,12 @@ from ..searchSpaceConfig import Config
 from .searchSpaceGA import *
 from ..utils import *
 
-def elitisteSelection(population:list, fitness, nbr:int, **kwarg)->list :
+def elitisteSelection(population:list, fitness_scores, nbr:int, **kwarg)->list :
     """
         Return the ~~nbr~~ individuals with the best fitness.
-        Params :
+        Args :
             population : list, list of architectures.
-            fitness : function, evaluation function.
+            fitness_scores : tuple, population and her fitness
             kwarg : the fitness function arguments
             nbr : int, the number of individuals to be returned.
         Return : list
@@ -19,23 +19,19 @@ def elitisteSelection(population:list, fitness, nbr:int, **kwarg)->list :
     if nbr >= len(population):
         return population
     
-    # Calculate fitness for each individual
-    # We use a list comprehension to create (individual, fitness_score) tuples
-    fitness_scores = [(individual, fitness(individual, **kwarg)) for individual in population]
-    
     # Sort the list based on fitness scores in descending order
     sorted_population = sorted(fitness_scores, key=lambda x: x[1], reverse=True)
     
     # Return the top 'nbr' individuals (without their fitness scores)
     return [individual for individual, _ in sorted_population[:nbr]]
 
-def polynomialRankSelection(population: list, fitness, nbr: int, selective_pressure=1.5, **kwargs) -> list:
+def polynomialRankSelection(population: list, fitness_scores:tuple, nbr: int, selective_pressure=1.5, **kwargs) -> list:
     """
         Perform polynomial rank-based selection.
         
-        Params:
+        Args:
             population : list, list of architectures
-            fitness : function, evaluation function
+            fitness_scores : tuple, population and her fitness
             nbr : int, number of individuals to be selected
             selective_pressure : float, the pressure of selection
             kwargs : additional arguments for fitness function
@@ -43,8 +39,6 @@ def polynomialRankSelection(population: list, fitness, nbr: int, selective_press
         Returns:
         list: Selected individuals based on polynomial rank-based selection
     """
-    # Compute fitness for each individual
-    fitness_scores = [(individual, fitness(individual, **kwargs)) for individual in population]
     
     # Sort individuals by fitness in descending order
     sorted_population = sorted(fitness_scores, key=lambda x: x[1], reverse=True)
@@ -76,13 +70,13 @@ def polynomialRankSelection(population: list, fitness, nbr: int, selective_press
     
     return selected
 
-def probabilisticTournamentSelection(population: list, fitness, nbr: int, tournament_size = 3, tournament_prob=.75, **kwargs) -> list:
+def probabilisticTournamentSelection(population: list, fitness_scores, nbr: int, tournament_size = 3, tournament_prob=.75, **kwargs) -> list:
     """
         Perform probabilistic tournament selection.
         
-        Params:
+        Args:
             population : list, list of architectures
-            fitness : function, evaluation function
+            fitness_scores : tuple, population and her fitness
             nbr : int, number of individuals to be selected
             tournament_size : int, the tournament size
             tournament_prob: float
@@ -91,9 +85,6 @@ def probabilisticTournamentSelection(population: list, fitness, nbr: int, tourna
         Returns:
             list: Selected individuals based on probabilistic tournament selection
     """
-    
-    # Compute fitness for each individual
-    fitness_scores = [(individual, fitness(individual, **kwargs)) for individual in population]
     
     selected = []
     for _ in range(nbr):
@@ -119,7 +110,7 @@ def probabilisticTournamentSelection(population: list, fitness, nbr: int, tourna
 def onePointCrossover(parent1:str, parent2:str)-> str:
     """
         Makes a one-point crossover of two parents.
-        Params : 
+        Args : 
             parent1 : str, binary string
             parent2 : str, binary string
         Return : str, binary string
@@ -133,7 +124,7 @@ def onePointCrossover(parent1:str, parent2:str)-> str:
 def mutate(architecture:str, mutation_rate=0.1)->str:
     """
         Make a mutation with a probability of ~~mutation_rate~~ on the architecture ~~architecture~~
-        Params :
+        Args :
             architecture : str, binary string
             mutation_rate : float, probability bitween 0 and 1
         Return : str, binary string

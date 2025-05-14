@@ -6,7 +6,7 @@ SIZE_INDIVIDUAL = 8
 def encode_layer(layer:dict)->str:
     """
         Encoding the layer ~~layer~~ in binary string
-        Params :
+        Args :
             layer : dictionary
         Return : str
     """
@@ -34,7 +34,7 @@ def encode_layer(layer:dict)->str:
 def decode_layer(bits:str)->dict:
     """
         Decoding the bit sequence ~~bits~~ in dictionary.
-        Params :
+        Args :
             bits : str
         Return : dict
     """
@@ -62,7 +62,7 @@ def decode_layer(bits:str)->dict:
 def architecture_to_binary(layers:list)->str:
     """
         Encoding the layers list ~~layers~~ into binary string.
-        Params :
+        Args :
             layers : list of dict
         Return : 
             str
@@ -72,7 +72,7 @@ def architecture_to_binary(layers:list)->str:
 def binary_to_architecture(binary_string):
     """
         Decode the bit sequence ~~binary_string~~ into a dictionary-like architecture
-        Params :
+        Args :
             binary_string : str
         Return : list of dict
     """
