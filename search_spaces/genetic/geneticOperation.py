@@ -5,13 +5,12 @@ from ..searchSpaceConfig import Config
 from .searchSpaceGA import *
 from ..utils import *
 
-def elitisteSelection(population:list, fitness_scores, nbr:int, **kwarg)->list :
+def elitisteSelection(population:list, fitness_scores, nbr:int)->list :
     """
         Return the ~~nbr~~ individuals with the best fitness.
         Args :
             population : list, list of architectures.
             fitness_scores : tuple, population and her fitness
-            kwarg : the fitness function arguments
             nbr : int, the number of individuals to be returned.
         Return : list
     """
@@ -25,7 +24,7 @@ def elitisteSelection(population:list, fitness_scores, nbr:int, **kwarg)->list :
     # Return the top 'nbr' individuals (without their fitness scores)
     return [individual for individual, _ in sorted_population[:nbr]]
 
-def polynomialRankSelection(population: list, fitness_scores:tuple, nbr: int, selective_pressure=1.5, **kwargs) -> list:
+def polynomialRankSelection(population: list, fitness_scores:tuple, nbr: int, selective_pressure=1.5) -> list:
     """
         Perform polynomial rank-based selection.
         
@@ -33,9 +32,7 @@ def polynomialRankSelection(population: list, fitness_scores:tuple, nbr: int, se
             population : list, list of architectures
             fitness_scores : tuple, population and her fitness
             nbr : int, number of individuals to be selected
-            selective_pressure : float, the pressure of selection
-            kwargs : additional arguments for fitness function
-        
+            selective_pressure : float, the pressure of selection        
         Returns:
         list: Selected individuals based on polynomial rank-based selection
     """
@@ -70,7 +67,7 @@ def polynomialRankSelection(population: list, fitness_scores:tuple, nbr: int, se
     
     return selected
 
-def probabilisticTournamentSelection(population: list, fitness_scores, nbr: int, tournament_size = 3, tournament_prob=.75, **kwargs) -> list:
+def probabilisticTournamentSelection(population: list, fitness_scores, nbr: int, tournament_size = 3, tournament_prob=.75) -> list:
     """
         Perform probabilistic tournament selection.
         
@@ -80,7 +77,6 @@ def probabilisticTournamentSelection(population: list, fitness_scores, nbr: int,
             nbr : int, number of individuals to be selected
             tournament_size : int, the tournament size
             tournament_prob: float
-            kwargs : additional arguments for fitness function
         
         Returns:
             list: Selected individuals based on probabilistic tournament selection
@@ -119,7 +115,8 @@ def onePointCrossover(parent1:str, parent2:str)-> str:
     cut_off_point2 = random.choice([i for i in range(len(parent2)) if i % Config.CROMOSOME_SIZE==0])
     child1 = parent1[:cut_off_point1] + parent2[cut_off_point2:]
     child2 = parent2[:cut_off_point2] + parent1[cut_off_point1:]
-    return child1 if is_valid_architecture(child1) else child2
+    print(child1, child2)
+    return child1 if is_valid_architecture(binary_to_architecture(child1)) else child2
 
 def mutate(architecture:str, mutation_rate=0.1)->str:
     """
