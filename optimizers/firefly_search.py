@@ -2,18 +2,16 @@ import asyncio
 import torch
 import numpy as np
 from ..search_spaces.utils import generate_valid_architecture, is_valid_architecture, build_torch_network
-from ..search_spaces.genetic.geneticOperation import *
-from ..search_spaces.genetic.searchSpaceGA import *
+from ..search_spaces.firefly.searchSpaceFA import *
+from ..search_spaces.firefly.fireflyOperation import * 
 from ..train.trainer import ModelTrainer
 from ..ressource.ressource_manager import ResourceManager
 
-class GeneticSearch:
+class FireFlySearch:
     def __init__(self, 
-                 selection_type = "elitist",
-                 mutation_rate = 0.1,
-                 tournement_size = 5,
-                 tournement_prob=.75,
-                 selection_presure=1.5,
+                 alpha,
+                 beta0,
+                 gamma,
                  population_size=50, 
                  iterations=5, 
                  train_loader=None, 
@@ -29,11 +27,9 @@ class GeneticSearch:
         Initialize the genetic algorithme search for CNN architectures.
         
         Args:
-            selection_type : str, name of the selection type : eletist, polynomial, tournement
-            mutation_rate : float, the mutation rate 
-            tournement_size : float, the tournement size when tournement selection is used
-            tournement_prob :float, the tournement probability when tournement selection is used
-            selection_presure : float, the selection presure when polynomiale rank selection is used.
+            alpha : float, control parameter
+            beta0 : float, the attractiveness at distance zero,
+            gamma : float, the light absorption coefficient
             population_size: int, size of the population for each iteration
             iterations: int, number of search iterations
             train_loader: DataLoader, training data loader
@@ -46,11 +42,9 @@ class GeneticSearch:
             use_gpu: bool, whether to use GPU if available
             max_concurrent: int, maximum number of concurrent evaluations
         """
-        self.seletion_type = selection_type
-        self.selection_presure = selection_presure
-        self.tournement_size = tournement_size
-        self.tournement_prob = tournement_prob
-        self.mutation_rate = mutation_rate
+        self.alpha = alpha
+        self.beta0 = beta0
+        self.gamma = gamma
         self.population_size = population_size
         self.iterations = iterations
         self.train_loader = train_loader
@@ -106,13 +100,13 @@ class GeneticSearch:
             
             # Get the last training loss
             train_loss = trainer.loss_history[-1] if trainer.loss_history else float('inf')
-            self.count_eval += 1
             
             # Test the model
             accuracy, test_loss = trainer.test()
             
             avg_loss = (train_loss + test_loss) / 2
-            fitness = 1/(1 + avg_loss)  
+            fitness = 1/(1 + avg_loss) 
+            self.count_eval += 1 
             
             return fitness
             
@@ -151,32 +145,8 @@ class GeneticSearch:
                 self.best_fitness = fitness
                 self.best_architecture = architecture
                 print(f"New best architecture found with fitness: {fitness}")
-                
         
         return fitness_scores
-
-    def generate_population(self):
-        """
-        Generate a population of random valid architectures.
-        
-        Returns:
-            list of list of dict: a list of generated architectures
-        """
-        population = []
-        for _ in range(self.population_size):
-            arch = generate_valid_architecture()
-            population.append(arch)
-        return population
-    
-    def _selection(self, population, fitness_scores, n) :
-        if self.seletion_type == "elitist" :
-            return elitisteSelection(population, fitness_scores,n)
-        elif self.seletion_type == "polynomial" : 
-            return polynomialRankSelection(population, fitness_scores,n,self.selection_presure)
-        elif self.seletion_type == "tournement" :
-            return probabilisticTournamentSelection(population,fitness_scores, n, self.tournement_size, self.tournement_prob)
-        else :
-            raise ValueError("type of selection Unsupported")
 
     async def search(self):
         """
@@ -187,7 +157,7 @@ class GeneticSearch:
         """
         self.history = []
         # Generate population
-        population = self.generate_population()
+        population = initializeFireflyPopulation(self.population_size)
 
         # Evaluate population
         fitness_scores = await self.evaluate_population(population)
@@ -196,25 +166,22 @@ class GeneticSearch:
             print(f"Iteration {iteration+1}/{self.iterations}")
 
             new_generation = []
-
-            #Selection parent
-            parent1, parent2 = self._selection(population, fitness_scores, 2)
-
-            # Crossover
-            child = onePointCrossover(architecture_to_binary(parent1),architecture_to_binary(parent2))
-            new_generation.append(binary_to_architecture(child))
-
-            # Mutation 
-            for idx, individual in enumerate(population) :
-                mutant = mutate(architecture_to_binary(individual),self.mutation_rate)
-                if mutant != individual :
-                    new_generation.append(binary_to_architecture(mutant))
-            
-            # Evaluate new generation
+            for i in range(self.population_size-1) :
+                for j in range(i+1, self.population_size) :
+                    if fitness_scores[i][1] < fitness_scores[j][1] :
+                        firefly = architecture_to_vector(fitness_scores[i][0])
+                        brighhtest_firfly = architecture_to_vector(fitness_scores[j][0])
+                        # Move firefly i towards firefly j
+                        new_firefly = moveFirefly(alpha=self.alpha,beta0=self.beta0,gamma=self.gamma,firefly=firefly, brightest_firefly=brighhtest_firfly)
+                        
+                        if not np.array_equal(new_firefly, firefly) :
+                            new_generation.append(vector_to_achitecture(new_firefly))
+                            population.append(vector_to_achitecture(new_firefly))
+            print(new_generation)
+            # Compute  light intensity (fitness score)
             new_fitness_scores = await self.evaluate_population(new_generation)
-
+            
             fitness_scores.extend(new_fitness_scores)
-
             
             # Print statistics
             avg_fitness = sum(score for _,score in fitness_scores) / len(fitness_scores)

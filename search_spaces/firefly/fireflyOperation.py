@@ -19,7 +19,7 @@ def attractivenessFirfly(beta0:float, gamma:float, distance:float) -> float :
         calculates the distance between two fireflies based on their distance
         Args :
             beta0 : float, the attractiveness at distance zero,
-            gamma : float, the lighr absorption coefficient
+            gamma : float, the light absorption coefficient
             distance : float, the distance between the two fireflies
         Return : float,
             the attractiness value
@@ -133,13 +133,12 @@ def initializeFireflyPopulation(population_size:int)->list:
     Args:
         population_size: int, the number of fireflies to generate
     Return:
-        list of np.array, the population of fireflies
+        list of list of dict, the population of fireflies
     """
     fireflies = []
     for _ in range(population_size):
         valid_arch = generate_valid_architecture()
-        firefly = architecture_to_vector(valid_arch)
-        fireflies.append(firefly)
+        fireflies.append(valid_arch)
     return fireflies
 
 
