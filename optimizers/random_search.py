@@ -1,9 +1,9 @@
 import asyncio
 import torch
 import numpy as np
-from ..search_spaces.utils import generate_valid_architecture, is_valid_architecture, build_torch_network
-from ..train.trainer import ModelTrainer
-from ..ressource.ressource_manager import ResourceManager
+from search_spaces.utils import generate_valid_architecture, is_valid_architecture, build_torch_network
+from train.trainer import ModelTrainer
+from ressource.ressource_manager import ResourceManager
 
 class RandomSearch:
     def __init__(self, 
@@ -90,7 +90,7 @@ class RandomSearch:
             trainer.train(verbose=False)
             
             # Get the last training loss
-            train_loss = trainer.loss_history[-1] if trainer.loss_history else float('inf')
+            train_loss = trainer.loss_history[-1] if trainer.loss_history else 0
             
             # Test the model
             accuracy, test_loss = trainer.test()

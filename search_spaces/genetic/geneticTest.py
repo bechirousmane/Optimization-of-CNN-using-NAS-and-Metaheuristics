@@ -1,13 +1,13 @@
 import unittest
 import torch
 import torch.nn as nn
-from .searchSpaceGA import (
+from search_spaces.genetic.searchSpaceGA import (
     encode_layer, decode_layer, 
     architecture_to_binary, binary_to_architecture, 
     SIZE_INDIVIDUAL
 )
-from ..searchSpaceConfig import Config
-from .geneticOperation import (
+from search_spaces.searchSpaceConfig import Config
+from search_spaces.genetic.geneticOperation import (
     generate_valid_architecture,
     build_torch_network,
     elitisteSelection,

@@ -1,9 +1,9 @@
 import random
 import math
 import torch.nn as nn
-from ..searchSpaceConfig import Config
-from .searchSpaceGA import *
-from ..utils import *
+from search_spaces.searchSpaceConfig import Config
+from search_spaces.genetic.searchSpaceGA import *
+from search_spaces.utils import *
 
 def elitisteSelection(population:list, fitness_scores, nbr:int)->list :
     """
@@ -115,7 +115,6 @@ def onePointCrossover(parent1:str, parent2:str)-> str:
     cut_off_point2 = random.choice([i for i in range(len(parent2)) if i % Config.CROMOSOME_SIZE==0])
     child1 = parent1[:cut_off_point1] + parent2[cut_off_point2:]
     child2 = parent2[:cut_off_point2] + parent1[cut_off_point1:]
-    print(child1, child2)
     return child1 if is_valid_architecture(binary_to_architecture(child1)) else child2
 
 def mutate(architecture:str, mutation_rate=0.1)->str:

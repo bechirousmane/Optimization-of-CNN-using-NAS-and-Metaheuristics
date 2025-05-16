@@ -1,7 +1,7 @@
 import numpy as np
-from .searchSpaceFA import *
-from ..searchSpaceConfig import *
-from ..utils import *
+from search_spaces.firefly.searchSpaceFA import *
+from search_spaces.searchSpaceConfig import *
+from search_spaces.utils import *
 
 def euclideanDistance(vector1:np.array, vector2:np.array)->float :
     """

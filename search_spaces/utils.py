@@ -1,6 +1,6 @@
 import random
 import torch.nn as nn
-from .searchSpaceConfig import Config
+from search_spaces.searchSpaceConfig import Config
 
 def generate_valid_architecture()->list:
     """

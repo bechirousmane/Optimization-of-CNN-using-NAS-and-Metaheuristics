@@ -1,4 +1,9 @@
 *.md
 LICENSE
 *.pyc
+notebooks/data
+build/
+my_config.json
+optimization.egg-info/
+
 

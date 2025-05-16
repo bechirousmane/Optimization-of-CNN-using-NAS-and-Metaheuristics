@@ -1,11 +1,11 @@
 import asyncio
 import torch
 import numpy as np
-from ..search_spaces.utils import generate_valid_architecture, is_valid_architecture, build_torch_network
-from ..search_spaces.genetic.geneticOperation import *
-from ..search_spaces.genetic.searchSpaceGA import *
-from ..train.trainer import ModelTrainer
-from ..ressource.ressource_manager import ResourceManager
+from search_spaces.utils import generate_valid_architecture, is_valid_architecture, build_torch_network
+from search_spaces.genetic.geneticOperation import *
+from search_spaces.genetic.searchSpaceGA import *
+from train.trainer import ModelTrainer
+from ressource.ressource_manager import ResourceManager
 
 class GeneticSearch:
     def __init__(self, 
@@ -105,7 +105,7 @@ class GeneticSearch:
             trainer.train(verbose=False)
             
             # Get the last training loss
-            train_loss = trainer.loss_history[-1] if trainer.loss_history else float('inf')
+            train_loss = trainer.loss_history[-1] if trainer.loss_history else 0
             self.count_eval += 1
             
             # Test the model
@@ -209,6 +209,7 @@ class GeneticSearch:
                 mutant = mutate(architecture_to_binary(individual),self.mutation_rate)
                 if mutant != individual :
                     new_generation.append(binary_to_architecture(mutant))
+                    population.append(binary_to_architecture(mutant))
             
             # Evaluate new generation
             new_fitness_scores = await self.evaluate_population(new_generation)

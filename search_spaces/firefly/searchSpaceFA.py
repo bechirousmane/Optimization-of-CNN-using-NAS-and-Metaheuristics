@@ -1,6 +1,6 @@
 import numpy as np
-from ..searchSpaceConfig import Config
-from ..utils import *
+from search_spaces.searchSpaceConfig import Config
+from search_spaces.utils import *
 
 # Mapping layers type
 LAYER_TYPE = {

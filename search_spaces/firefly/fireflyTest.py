@@ -1,9 +1,9 @@
 import unittest
 import torch.nn as nn
-from .searchSpaceFA import *
-from .fireflyOperation import * 
-from ..utils import * 
-from ..searchSpaceConfig import *
+from search_spaces.firefly.searchSpaceFA import *
+from search_spaces.firefly.fireflyOperation import * 
+from search_spaces.utils import * 
+from search_spaces.searchSpaceConfig import *
 
 class TestFireflySearchSpacesFunction(unittest.TestCase) :
     def test_encode_decode_layer_conv(self):
