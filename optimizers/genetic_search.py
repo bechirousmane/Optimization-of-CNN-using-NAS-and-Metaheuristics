@@ -14,6 +14,7 @@ class GeneticSearch:
                  tournament_size = 5,
                  tournament_prob=.75,
                  selection_presure=1.5,
+                 crossover_prob = .75,
                  population_size=50, 
                  iterations=5, 
                  train_loader=None, 
@@ -51,6 +52,7 @@ class GeneticSearch:
         self.tournement_size = tournament_size
         self.tournement_prob = tournament_prob
         self.mutation_rate = mutation_rate
+        self.crossover_prob = crossover_prob
         self.population_size = population_size
         self.iterations = iterations
         self.train_loader = train_loader
@@ -179,7 +181,7 @@ class GeneticSearch:
         else :
             raise ValueError("type of selection Unsupported")
 
-    async def search(self):
+   async def search(self):
         """
         Perform the genetic algorithm for optimal CNN architectures.
         
@@ -187,43 +189,62 @@ class GeneticSearch:
             tuple: (best_architecture, best_fitness, history)
         """
         self.history = []
-        # Generate population
-        population = self.generate_population()
+        # Generate initial population
+        current_population = self.generate_population()
 
-        # Evaluate population
-        fitness_scores = await self.evaluate_population(population)
+        # Evaluate initial population
+        population_with_fitness = await self.evaluate_population(current_population)
             
         for iteration in range(self.iterations):
             print(f"Iteration {iteration+1}/{self.iterations}")
-
+            
+            # Create new generation
             new_generation = []
-
-            #Selection parent
-            parent1, parent2 = self._selection(population, fitness_scores, 2)
-
-            # Crossover
-            child = onePointCrossover(architecture_to_binary(parent1),architecture_to_binary(parent2))
-            new_generation.append(binary_to_architecture(child))
-
-            # Mutation 
-            for idx, individual in enumerate(population) :
-                mutant = mutate(architecture_to_binary(individual),self.mutation_rate)
-                if mutant != individual :
-                    new_generation.append(binary_to_architecture(mutant))
-                    population.append(binary_to_architecture(mutant))
+            
+            # Elitism: Keep the best individuals
+            elite_count = max(1, self.population_size // 10)  # 10% elitism
+            sorted_population = sorted(population_with_fitness, key=lambda x: x[1], reverse=True)
+            elite = [arch for arch, _ in sorted_population[:elite_count]]
+            new_generation.extend(elite)
+            
+            # Fill the rest with crossover and mutation
+            while len(new_generation) < self.population_size:
+                # Select parents
+                parents = self._selection(current_population, population_with_fitness, 2)
+                
+                # Apply crossover with probability 0.7
+                if np.random.random() < self.crossover_prob:
+                    child_binary = onePointCrossover(
+                        architecture_to_binary(parents[0]), 
+                        architecture_to_binary(parents[1])
+                    )
+                    child = binary_to_architecture(child_binary)
+                else:
+                    # If no crossover, just take one parent
+                    child = parents[0]
+                
+                child_binary = architecture_to_binary(child)
+                mutated_binary = mutate(child_binary, self.mutation_rate)
+                mutated_child = binary_to_architecture(mutated_binary)
+                
+                if is_valid_architecture(mutated_child):
+                    new_generation.append(mutated_child)
+            
+            # Trim to population size if needed
+            new_generation = new_generation[:self.population_size]
             
             # Evaluate new generation
-            new_fitness_scores = await self.evaluate_population(new_generation)
-
-            fitness_scores.extend(new_fitness_scores)
-
+            population_with_fitness = await self.evaluate_population(new_generation)
             
             # Print statistics
-            avg_fitness = sum(score for _,score in fitness_scores) / len(fitness_scores)
+            current_fitness = [f for _, f in population_with_fitness]
+            avg_fitness = sum(current_fitness) / len(current_fitness)
             print(f"Average fitness: {avg_fitness}")
             print(f"Best fitness so far: {self.best_fitness}")
+            print(f"Models evaluated: {self.count_eval}")
         
         return self.best_architecture, self.best_fitness, self.history
+
 
     def run_search(self):
         """

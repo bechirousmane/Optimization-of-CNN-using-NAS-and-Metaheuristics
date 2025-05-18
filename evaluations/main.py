@@ -116,6 +116,8 @@ def main():
                         help='Mutation rate for genetic algorithm')
     parser.add_argument('--tournament-size', type=int, default=5,
                         help='Tournament size for genetic algorithm')
+    parser.add_argument('--crossover-prob', type=float, default=.75,
+                       help='Crossover probability for genetic algorithm')
     
     
     # Add firefly-specific parameters
@@ -188,6 +190,7 @@ def main():
                 tournament_size=args.tournament_size,
                 tournament_prob=0.75,
                 selection_presure=1.5,
+                crossover_prob=args.crossover_prob
             )
             search_type = 'genetic'
             

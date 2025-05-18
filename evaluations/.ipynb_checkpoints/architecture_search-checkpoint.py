@@ -106,7 +106,7 @@ class ArchitectureSearch:
         return best_arch, best_fitness, history
     
     def run_genetic_search(self, selection_type="tournement", mutation_rate=0.1,
-                          tournament_size=5, tournament_prob=0.75, selection_presure=1.5):
+                          tournament_size=5, tournament_prob=0.75, selection_presure=1.5, crossover_prob=.75):
         """
         Performs a genetic architecture search.
 
@@ -125,6 +125,7 @@ class ArchitectureSearch:
             mutation_rate=mutation_rate,
             tournament_size=tournament_size,
             tournament_prob=tournament_prob,
+            crossover_prob=crossover_prob
             selection_presure=selection_presure,
             population_size=self.params['population_size'],
             iterations=self.params['iterations'],
