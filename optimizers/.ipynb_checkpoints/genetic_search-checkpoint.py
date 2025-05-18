@@ -181,7 +181,7 @@ class GeneticSearch:
         else :
             raise ValueError("type of selection Unsupported")
 
-   async def search(self):
+    async def search(self) :
         """
         Perform the genetic algorithm for optimal CNN architectures.
         

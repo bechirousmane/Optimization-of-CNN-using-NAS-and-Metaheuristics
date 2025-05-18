@@ -125,7 +125,7 @@ class ArchitectureSearch:
             mutation_rate=mutation_rate,
             tournament_size=tournament_size,
             tournament_prob=tournament_prob,
-            crossover_prob=crossover_prob
+            crossover_prob=crossover_prob,
             selection_presure=selection_presure,
             population_size=self.params['population_size'],
             iterations=self.params['iterations'],
