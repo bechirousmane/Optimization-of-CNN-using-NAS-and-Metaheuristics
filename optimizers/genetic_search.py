@@ -11,8 +11,8 @@ class GeneticSearch:
     def __init__(self, 
                  selection_type = "elitist",
                  mutation_rate = 0.1,
-                 tournement_size = 5,
-                 tournement_prob=.75,
+                 tournament_size = 5,
+                 tournament_prob=.75,
                  selection_presure=1.5,
                  population_size=50, 
                  iterations=5, 
@@ -31,8 +31,8 @@ class GeneticSearch:
         Args:
             selection_type : str, name of the selection type : eletist, polynomial, tournement
             mutation_rate : float, the mutation rate 
-            tournement_size : float, the tournement size when tournement selection is used
-            tournement_prob :float, the tournement probability when tournement selection is used
+            tournament_size : float, the tournement size when tournement selection is used
+            tournament_prob :float, the tournement probability when tournement selection is used
             selection_presure : float, the selection presure when polynomiale rank selection is used.
             population_size: int, size of the population for each iteration
             iterations: int, number of search iterations
@@ -48,8 +48,8 @@ class GeneticSearch:
         """
         self.seletion_type = selection_type
         self.selection_presure = selection_presure
-        self.tournement_size = tournement_size
-        self.tournement_prob = tournement_prob
+        self.tournement_size = tournament_size
+        self.tournement_prob = tournament_prob
         self.mutation_rate = mutation_rate
         self.population_size = population_size
         self.iterations = iterations
