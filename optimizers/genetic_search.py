@@ -134,6 +134,7 @@ class GeneticSearch:
         
         async def evaluate_with_resource(index, architecture):
             async with self.resource_manager.acquire() as device:
+                #print(device)
                 fitness = await self.evaluate_architecture(architecture, device)
                 fitness_scores[index] = (architecture,fitness)
                 return index, fitness, architecture
