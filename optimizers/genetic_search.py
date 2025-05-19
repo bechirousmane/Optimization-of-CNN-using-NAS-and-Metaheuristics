@@ -212,7 +212,7 @@ class GeneticSearch:
                 # Select parents
                 parents = self._selection(current_population, population_with_fitness, 2)
                 
-                # Apply crossover with probability 0.7
+                # Apply crossover with probability
                 if np.random.random() < self.crossover_prob:
                     child_binary = onePointCrossover(
                         architecture_to_binary(parents[0]), 

@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 
 from data.cifar10_loader import load_cifar10
+from data.mnist_loader import load_mnist
 from optimizers.random_search import RandomSearch
 from optimizers.genetic_search import GeneticSearch
 from optimizers.firefly_search import FireFlySearch
@@ -58,24 +59,39 @@ class ArchitectureSearch:
         self.trained_models = {}
         self.training_histories = {}
     
-    def load_data(self, n_sub_train=20000, n_sub_test=5000):
+    def load_data(self, data_name, n_sub_train=20000, n_sub_test=5000):
         """
-        Loads the full CIFAR10 data set and a subset for optimization.
+        Loads the full ~~data_name~~ data set and a subset for optimization.
 
         Args:
+            data_name (str) : Data name. must be cifar for CIFAR-10 data or mnist for MNIST data
             n_sub_train (int): Number of training samples for optimization.
             n_sub_test (int): Number of test samples for optimization.
         """
         
-        self.sub_train, self.sub_test = load_cifar10(
+        if data_name == 'mnist' : 
+            self.sub_train, self.sub_test = load_mnist(
             n_train=n_sub_train, 
             n_test=n_sub_test, 
             batch_size=self.params['batch_size']
-        )
+            )
         
-        self.train_data, self.test_data = load_cifar10(
-            batch_size=self.params['batch_size']
-        )
+            self.train_data, self.test_data = load_mnist(
+                batch_size=self.params['batch_size']
+            )
+        elif data_name == 'cifar' :
+            self.sub_train, self.sub_test = load_cifar10(
+                n_train=n_sub_train, 
+                n_test=n_sub_test, 
+                batch_size=self.params['batch_size']
+            )
+            
+            self.train_data, self.test_data = load_cifar10(
+                batch_size=self.params['batch_size']
+            )
+        
+        else :
+            raise ValueError("data name unsupported.")
     
     def run_random_search(self):
         """

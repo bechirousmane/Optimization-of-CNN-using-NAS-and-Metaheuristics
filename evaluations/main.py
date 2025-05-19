@@ -127,11 +127,15 @@ def main():
                         help='Beta0 parameter for firefly algorithm')
     parser.add_argument('--gamma', type=float, default=1.0,
                         help='Gamma parameter for firefly algorithm')
+    parser.add_argument('--data',type=str,default='mnist',
+                        help='The data for training')
+    parser.add_argument('--input-dim', type=tuple, default=(1,28,28),
+                        help='The input shape')
     
     args = parser.parse_args()
     
     # Setup logger
-    logger = setup_logger(f"{args.algorithm}_search", args.output_dir)
+    logger = setup_logger(f"{args.algorithm}_search_{args.data}", args.output_dir)
     logger.info("Starting architecture search")
     
     # Set random seeds for reproducibility
@@ -146,7 +150,8 @@ def main():
         'batch_size': args.batch_size,
         'population_size': args.population,
         'iterations': args.iterations,
-        'input_shape': (3, 32, 32),
+        'data' : args.data,
+        'input_shape': args.input_dim,
         'optimizer': "AdamW",
         'num_classes': 10,
         'seed': args.seed
@@ -162,9 +167,9 @@ def main():
     logger.info("Loaded configuration:")
     logger.info(Config.get_config_as_dict())
     
-    # Load CIFAR10 data
-    logger.info("Loading CIFAR10 data...")
-    arch_search.load_data(n_sub_train=args.sub_train, n_sub_test=args.sub_test)
+    # Load data
+    logger.info(f"Loading {args.data} data...")
+    arch_search.load_data(data_name=params['data'],n_sub_train=args.sub_train, n_sub_test=args.sub_test)
     
     # Create directories for results
     os.makedirs(args.output_dir, exist_ok=True)
@@ -233,14 +238,14 @@ def main():
         # Display training curve
         arch_search.plot_training_history(
             search_type=search_type,
-            title=f"Convergence curve of the best model found by {search_type} search",
-            save_path=os.path.join(args.output_dir, f"{search_type}_training_history.png")
+            title=f"Courbe de convergence trouver par l'algorithme {search_type} sur {params['data']}",
+            save_path=os.path.join(args.output_dir, f"{search_type}_training_{params['data']}_history.png")
         )
         
         # Display confusion matrix
         arch_search.plot_confusion_matrix(
             search_type=search_type,
-            save_path=os.path.join(args.output_dir, f"{search_type}_confusion_matrix.png")
+            save_path=os.path.join(args.output_dir, f"{search_type}_confusion_matrix_{params['data']}.png")
         )
     
     # Plot comparison if multiple algorithms were run
