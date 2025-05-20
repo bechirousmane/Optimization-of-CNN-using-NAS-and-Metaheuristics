@@ -1,6 +1,7 @@
 import torch.nn as nn
 import torch.optim as optim
 import torch
+from logging import Logger
 
 class ModelTrainer :
     def __init__(self, model, device, lr, epochs, train_loader, test_loader,optimizer):
@@ -14,6 +15,7 @@ class ModelTrainer :
                 train_loader : DataLoader, data for training
                 test_loader : DataLoader, data for testing
                 optimizer : str, the optimizer name. It must be among Adam and AdamW 
+                logger : logging.Logger
         """
         self.model = model.to(device)
         self.device = device
@@ -24,6 +26,8 @@ class ModelTrainer :
         self.optimizer = self._optimizer(optimizer)
         self.criterion = nn.CrossEntropyLoss()
         self.loss_history = []
+        self.accuracy_history = []
+
 
     def _optimizer(self, optimName) :
         if optimName == "Adam" :
@@ -38,10 +42,13 @@ class ModelTrainer :
             Traines the model.
             Args : 
                 verbose : bool, whether to print progress during training
-            Return : list, the loss list
+            Return : tuple of list, the loss history and accuracy history
         """
         self.model.train()
         self.loss_history = []
+        self.accuracy_history = []
+        correct = 0
+        total = 0
         for epoch in range(self.epochs) :
             epoch_loss = 0
 
@@ -56,11 +63,18 @@ class ModelTrainer :
 
                 epoch_loss += loss.item()
 
-            avg_loss = epoch_loss/len(self.train_loader)
-            if verbose :
-                print(f"Epochs : [{epoch}/{self.epochs}], average loss : {avg_loss:.6f}")
+                _, predicted = torch.max(outputs.data, 1)
+                total += targets.size(0)
+                correct += (predicted == targets).sum().item()
 
+            avg_loss = epoch_loss/len(self.train_loader)
+            accuracy = 100 * correct / total
             self.loss_history.append(avg_loss)
+            self.accuracy_history.append(accuracy)
+            if verbose :
+                print(f"Epochs : [{epoch}/{self.epochs}], average loss : {avg_loss:.6f}, Accuracy : {accuracy}%")
+
+        return  self.loss_history, self.accuracy_history
 
     def test(self):
         """

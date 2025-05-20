@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 
 from data.cifar10_loader import load_cifar10
+from data.mnist_loader import load_mnist
 from optimizers.random_search import RandomSearch
 from optimizers.genetic_search import GeneticSearch
 from optimizers.firefly_search import FireFlySearch
@@ -58,24 +59,41 @@ class ArchitectureSearch:
         self.trained_models = {}
         self.training_histories = {}
     
-    def load_data(self, n_sub_train=20000, n_sub_test=5000):
+    def load_data(self, data_name, n_sub_train=20000, n_sub_test=5000):
         """
-        Loads the full CIFAR10 data set and a subset for optimization.
+        Loads the full ~~data_name~~ data set and a subset for optimization.
 
         Args:
+            data_name (str) : Data name. must be cifar for CIFAR-10 data or mnist for MNIST data
             n_sub_train (int): Number of training samples for optimization.
             n_sub_test (int): Number of test samples for optimization.
         """
         
-        self.sub_train, self.sub_test = load_cifar10(
+        if data_name == 'mnist' : 
+            self.sub_train, self.sub_test = load_mnist(
             n_train=n_sub_train, 
             n_test=n_sub_test, 
             batch_size=self.params['batch_size']
-        )
+            )
         
-        self.train_data, self.test_data = load_cifar10(
-            batch_size=self.params['batch_size']
-        )
+            self.train_data, self.test_data = load_mnist(
+                batch_size=self.params['batch_size']
+            )
+        elif data_name == 'cifar' :
+            self.sub_train, self.sub_test = load_cifar10(
+                n_train=n_sub_train, 
+                n_test=n_sub_test, 
+                batch_size=self.params['batch_size']
+            )
+            
+            self.train_data, self.test_data = load_cifar10(
+                batch_size=self.params['batch_size']
+            )
+        
+        else :
+            raise ValueError("data name unsupported.")
+    
+
     
     def run_random_search(self):
         """
@@ -147,12 +165,17 @@ class ArchitectureSearch:
         
         return best_arch, best_fitness, history
     
-    def run_firefly_search(self, **firefly_params):
+    def run_firefly_search(self, alpha, beta0, gamma, sigma0, prob):
         """
         Performs a search using the firefly algorithm.
 
         Args:
-            **firefly_params: Parameters specific to the firefly algorithm.
+            alpha : float, control parameter
+            beta0 : float, the attractiveness at distance zero,
+            gamma : float, the light absorption coefficient
+            sigma0 : float, Variance
+            logger : logging.Logger
+            prob : float, the probability of using a normal distribution for firefly movement
             
         Returns:
             tuple: Optimal architecture, fitness, history
@@ -168,7 +191,11 @@ class ArchitectureSearch:
             lr=self.params['lr'],
             optimizer=self.params['optimizer'],
             use_gpu=self.params['use_gpu'],
-            **firefly_params
+            alpha=alpha,
+            beta0=beta0,
+            gamma=gamma,
+            sigma0=sigma0,
+            prob=prob,
         )
         
         best_arch, best_fitness, history = firefly_search.run_search()
@@ -212,13 +239,13 @@ class ArchitectureSearch:
             optimizer=self.params['optimizer']
         )
         
-        model_trainer.train(verbose=verbose)
+        train_loss, train_accuracy = model_trainer.train(verbose=verbose)
         test_accuracy, test_loss = model_trainer.test()
         
         self.trained_models[search_type] = best_model
         self.training_histories[search_type] = model_trainer.loss_history
         
-        return test_accuracy, test_loss
+        return train_accuracy, train_loss, test_accuracy, test_loss
     
     def plot_training_history(self, search_type='random', title=None, save_path=None):
         """

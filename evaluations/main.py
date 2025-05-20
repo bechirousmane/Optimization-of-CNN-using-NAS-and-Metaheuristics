@@ -63,9 +63,9 @@ def plot_comparison(results, title="Comparison of Search Algorithms", save_path=
     plt.figure(figsize=(12, 6))
     
     for algo, history in results.items():
-        plt.plot(history, label=f"{algo} search")
+        plt.semilogy(history, label=f"{algo} search")
     
-    plt.xlabel("Iteration")
+    plt.xlabel("Models evaluated")
     plt.ylabel("Best Fitness")
     plt.title(title)
     plt.legend()
@@ -110,6 +110,10 @@ def main():
                         help='Directory to save results')
     parser.add_argument('--seed', type=int, default=42,
                         help='Random seed for reproducibility')
+    parser.add_argument('--data',type=str,default='mnist', choices=['mnist','cifar'],
+                        help='The data for training')
+    parser.add_argument('--input-dim', type=tuple, default=(1,28,28),
+                        help='The input shape')
     
     # Add algorithm-specific parameters
     parser.add_argument('--mutation-rate', type=float, default=0.1,
@@ -127,9 +131,13 @@ def main():
                         help='Beta0 parameter for firefly algorithm')
     parser.add_argument('--gamma', type=float, default=1.0,
                         help='Gamma parameter for firefly algorithm')
+    parser.add_argument('--sigma0', type=float, default=1,
+                        help="The standart deviation for normal distribution.")
+    parser.add_argument('--prob', type=float, default=0.5,
+                        help="The probability to use normal distribution to move population towards best firefly.")
     
+
     args = parser.parse_args()
-    
     # Setup logger
     logger = setup_logger(f"{args.algorithm}_search", args.output_dir)
     logger.info("Starting architecture search")
@@ -149,7 +157,8 @@ def main():
         'input_shape': (3, 32, 32),
         'optimizer': "AdamW",
         'num_classes': 10,
-        'seed': args.seed
+        'seed': args.seed,
+        "input_shape" : args.input_dim
     }
     
     # Initialize architecture search
@@ -164,7 +173,7 @@ def main():
     
     # Load CIFAR10 data
     logger.info("Loading CIFAR10 data...")
-    arch_search.load_data(n_sub_train=args.sub_train, n_sub_test=args.sub_test)
+    arch_search.load_data(data_name=args.data, n_sub_train=args.sub_train, n_sub_test=args.sub_test)
     
     # Create directories for results
     os.makedirs(args.output_dir, exist_ok=True)
@@ -199,48 +208,52 @@ def main():
             best_arch, best_fitness, history = arch_search.run_firefly_search(
                 alpha=args.alpha,
                 beta0=args.beta0,
-                gamma=args.gamma
+                gamma=args.gamma,
+                prob=args.prob,
+                sigma0=args.sigma0
             )
             search_type = 'firefly'
         
-        # Store history for comparison
+        # Store loss history for comparison
         all_results[search_type] = history
         
         # Display best architecture
-        logger.info(f"Best architecture found ({search_type} search):")
+        logger.info(f"Best architecture found ({search_type} search on {args.data}):")
         logger.info(best_arch)
         
         # Train the best model
-        logger.info(f"\n=== Training best model ({search_type} search) ===")
-        accuracy, loss = arch_search.train_best_model(
+        logger.info(f"\n=== Training best model ({search_type} search on {args.data}) ===")
+        train_accuracy, train_loss,test_accuracy, test_loss = arch_search.train_best_model(
             search_type=search_type, 
             epochs=args.final_epochs
         )
-        logger.info(f"Test accuracy: {accuracy:.4f}")
-        logger.info(f"Test loss: {loss:.4f}")
+        logger.info(f"train accuracy : {train_accuracy[-1]: .4f} ")
+        logger.info(f"train loss : {train_loss[-1]: .4f}")
+        logger.info(f"Test accuracy: {test_accuracy:.4f}")
+        logger.info(f"Test loss: {test_loss:.4f}")
         
         # Save results
-        save_results(
-            search_type=search_type,
-            best_arch=best_arch,
-            best_fitness=best_fitness,
-            history=history,
-            accuracy=accuracy,
-            loss=loss,
-            path=args.output_dir
-        )
+        # save_results(
+        #     search_type=search_type,
+        #     best_arch=best_arch,
+        #     best_fitness=best_fitness,
+        #     history=history,
+        #     accuracy=accuracy,
+        #     loss=loss,
+        #     path=args.output_dir
+        # )
         
         # Display training curve
         arch_search.plot_training_history(
             search_type=search_type,
-            title=f"Convergence curve of the best model found by {search_type} search",
-            save_path=os.path.join(args.output_dir, f"{search_type}_training_history.png")
+            title=f"Convergence curve of the best model found by algorithm {search_type} on {args.data}",
+            save_path=os.path.join(args.output_dir, f"{search_type}_{args.data}_training_history.png")
         )
         
         # Display confusion matrix
         arch_search.plot_confusion_matrix(
             search_type=search_type,
-            save_path=os.path.join(args.output_dir, f"{search_type}_confusion_matrix.png")
+            save_path=os.path.join(args.output_dir, f"{search_type}_{args.data}_confusion_matrix.png")
         )
     
     # Plot comparison if multiple algorithms were run

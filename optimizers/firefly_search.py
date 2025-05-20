@@ -146,12 +146,12 @@ class FireFlySearch:
         
         # Update history and check for new best architecture
         for index, fitness, architecture in results:
-            self.history.append((architecture, fitness))
             if fitness > self.best_fitness:
                 self.best_fitness = fitness
                 self.best_architecture = architecture
                 print(f"New best architecture found with fitness: {fitness}")
-        
+            self.history.append(self.best_fitness)
+
         return fitness_scores
 
     async def search(self):
@@ -167,10 +167,7 @@ class FireFlySearch:
 
         # Evaluate initial population
         fitness_results = await self.evaluate_population(population)
-        
-        # Convert to format [(architecture, fitness), ...]
-        fireflies = [(arch, fitness) for arch, fitness in fitness_results]
-        
+                
         for iteration in range(self.iterations):
             print(f"Iteration {iteration+1}/{self.iterations}")
             
@@ -181,17 +178,17 @@ class FireFlySearch:
             current_sigma = self.sigma0 * (1 - iteration/self.iterations)
             
             # Sort fireflies by brightness (fitness)
-            fireflies.sort(key=lambda x: x[1], reverse=True)
+            fitness_results.sort(key=lambda x: x[1], reverse=True)
             
             new_generation = []
             
-            for i in range(len(fireflies) - 1):
-                arch_i, fitness_i = fireflies[i]
+            for i in range(len(fitness_results) - 1):
+                arch_i, fitness_i = fitness_results[i]
                 firefly_i = architecture_to_vector(arch_i)
                 
                 # Compare with all brighter fireflies
                 for j in range(i):
-                    arch_j, fitness_j = fireflies[j]
+                    arch_j, fitness_j = fitness_results[j]
                     
                     # Only move towards brighter fireflies
                     if fitness_j > fitness_i:
@@ -218,7 +215,7 @@ class FireFlySearch:
                             )
                             
                             # Apply perturbation to the firefly
-                            new_firefly = new_firefly + perturbation
+                            new_firefly = brightest_firefly + perturbation
                             
                             # Ensure integer values
                             new_firefly = np.round(new_firefly).astype(int)
@@ -231,19 +228,19 @@ class FireFlySearch:
                             new_generation.append(new_arch)
             
             # Evaluate new fireflies
-            print(f"Size of new generation : {len(new_generation)}")
+            print(f"New generation size : {len(new_generation)}")
             if new_generation:
                 new_fitness_results = await self.evaluate_population(new_generation)
                 new_fireflies = [(arch, fitness) for arch, fitness in new_fitness_results]
                 
                 # Combine populations and keep only the best
-                all_fireflies = fireflies + new_fireflies
+                all_fireflies = fitness_results + new_fireflies
                 all_fireflies.sort(key=lambda x: x[1], reverse=True)
-                fireflies = all_fireflies[:self.population_size]  # Keep population size constant
+                fitness_results = all_fireflies[:self.population_size]  # Keep population size constant
                 
-                # Optional: Add random new fireflies if diversity is too low
+                #  Add random new fireflies if diversity is too low
                 if iteration < self.iterations - 1:  # Skip in the last iteration for convergence
-                    unique_fitnesses = len(set(fitness for _, fitness in fireflies[:10]))
+                    unique_fitnesses = len(set(fitness for _, fitness in fitness_results[:10]))
                     if unique_fitnesses < 3:  # If top 10 have less than 3 different fitness values
                         print("Low diversity detected, adding random fireflies")
                         random_population = initializeFireflyPopulation(max(5, self.population_size//10))
@@ -252,16 +249,14 @@ class FireFlySearch:
                         
                         # Replace worst performing fireflies with random ones
                         if random_fireflies:
-                            fireflies = fireflies[:self.population_size-len(random_fireflies)] + random_fireflies
-                            fireflies.sort(key=lambda x: x[1], reverse=True)
+                            fitness_results = fitness_results[:self.population_size-len(random_fireflies)] + random_fireflies
+                            fitness_results.sort(key=lambda x: x[1], reverse=True)
             
             # Print statistics
-            avg_fitness = sum(fitness for _, fitness in fireflies) / len(fireflies)
-            best_current = max(fireflies, key=lambda x: x[1])
+            avg_fitness = sum(fitness for _, fitness in fitness_results) / len(fitness_results)
             print(f"Average fitness: {avg_fitness}")
-            print(f"Best fitness in this iteration: {best_current[1]}")
             print(f"Best fitness overall: {self.best_fitness}")
-        
+            print(f"Models evaluated : {self.count_eval}")
         return self.best_architecture, self.best_fitness, self.history
 
     def run_search(self):

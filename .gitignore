@@ -9,3 +9,5 @@ optimization.egg-info/
 
 evalutions/data/
 evaluations/data/
+data/MNIST/
+data/CIFAR/

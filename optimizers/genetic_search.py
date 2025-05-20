@@ -149,12 +149,13 @@ class GeneticSearch:
         
         # Update history and check for new best architecture
         for index, fitness, architecture in results:
-            self.history.append((architecture, fitness))
             if fitness > self.best_fitness:
                 self.best_fitness = fitness
                 self.best_architecture = architecture
                 print(f"New best architecture found with fitness: {fitness}")
-                
+           
+            self.history.append(self.best_fitness)
+
         
         return fitness_scores
 
