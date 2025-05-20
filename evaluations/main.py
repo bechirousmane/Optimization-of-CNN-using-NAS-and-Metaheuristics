@@ -139,7 +139,7 @@ def main():
 
     args = parser.parse_args()
     # Setup logger
-    logger = setup_logger(f"{args.algorithm}_search", args.output_dir)
+    logger = setup_logger(f"{args.algorithm}_search_{args.data}", args.output_dir)
     logger.info("Starting architecture search")
     
     # Set random seeds for reproducibility
@@ -154,7 +154,8 @@ def main():
         'batch_size': args.batch_size,
         'population_size': args.population,
         'iterations': args.iterations,
-        'input_shape': (3, 32, 32),
+        'data' : args.data,
+        'input_shape': args.input_dim,
         'optimizer': "AdamW",
         'num_classes': 10,
         'seed': args.seed,
@@ -246,8 +247,8 @@ def main():
         # Display training curve
         arch_search.plot_training_history(
             search_type=search_type,
-            title=f"Convergence curve of the best model found by algorithm {search_type} on {args.data}",
-            save_path=os.path.join(args.output_dir, f"{search_type}_{args.data}_training_history.png")
+            title=f"Courbe de convergence trouver par l'algorithme {search_type} sur {params['data']}",
+            save_path=os.path.join(args.output_dir, f"{search_type}_training_{params['data']}_history.png")
         )
         
         # Display confusion matrix

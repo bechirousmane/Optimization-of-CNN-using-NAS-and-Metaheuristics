@@ -93,8 +93,6 @@ class ArchitectureSearch:
         else :
             raise ValueError("data name unsupported.")
     
-
-    
     def run_random_search(self):
         """
         Performs a random architecture search.
