@@ -185,6 +185,7 @@ class FireFlySearch:
             for i in range(len(fitness_results) - 1):
                 arch_i, fitness_i = fitness_results[i]
                 firefly_i = architecture_to_vector(arch_i)
+                new_firefly = firefly_i.copy()
                 
                 # Compare with all brighter fireflies
                 for j in range(i):
@@ -199,7 +200,7 @@ class FireFlySearch:
                             alpha=current_alpha,
                             beta0=self.beta0,
                             gamma=self.gamma,
-                            firefly=firefly_i, 
+                            firefly=new_firefly, 
                             brightest_firefly=brightest_firefly
                         )
                         
@@ -222,10 +223,10 @@ class FireFlySearch:
                             
                             # Validate the firefly to ensure it represents a valid architecture
                             new_firefly = validateFirefly(new_firefly)
-                        
-                        if not np.array_equal(new_firefly, firefly_i):
-                            new_arch = vector_to_achitecture(new_firefly)
-                            new_generation.append(new_arch)
+
+                if not np.array_equal(new_firefly, firefly_i):
+                    new_arch = vector_to_achitecture(new_firefly)
+                    new_generation.append(new_arch)
             
             # Evaluate new fireflies
             print(f"New generation size : {len(new_generation)}")
@@ -237,20 +238,6 @@ class FireFlySearch:
                 all_fireflies = fitness_results + new_fireflies
                 all_fireflies.sort(key=lambda x: x[1], reverse=True)
                 fitness_results = all_fireflies[:self.population_size]  # Keep population size constant
-                
-                #  Add random new fireflies if diversity is too low
-                if iteration < self.iterations - 1:  # Skip in the last iteration for convergence
-                    unique_fitnesses = len(set(fitness for _, fitness in fitness_results[:10]))
-                    if unique_fitnesses < 3:  # If top 10 have less than 3 different fitness values
-                        print("Low diversity detected, adding random fireflies")
-                        random_population = initializeFireflyPopulation(max(5, self.population_size//10))
-                        random_fitness_results = await self.evaluate_population(random_population)
-                        random_fireflies = [(arch, fitness) for arch, fitness in random_fitness_results]
-                        
-                        # Replace worst performing fireflies with random ones
-                        if random_fireflies:
-                            fitness_results = fitness_results[:self.population_size-len(random_fireflies)] + random_fireflies
-                            fitness_results.sort(key=lambda x: x[1], reverse=True)
             
             # Print statistics
             avg_fitness = sum(fitness for _, fitness in fitness_results) / len(fitness_results)

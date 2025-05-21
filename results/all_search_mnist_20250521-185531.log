@@ -1,0 +1,34 @@
+2025-05-21 18:55:31,586 - all_search_mnist - INFO - Starting architecture search
+2025-05-21 18:55:31,588 - all_search_mnist - INFO - Loaded configuration:
+2025-05-21 18:55:31,588 - all_search_mnist - INFO - {'FILTERS_MAP': [1, 8, 16, 32], 'KERNEL_MAP': [3, 5, 7, 9], 'STRIDE_MAP': [1, 2, 3, 4], 'CONV_PADDING': 1, 'POOL_PADDING': 1, 'FC_SIZES': [8, 16, 24, 32, 48, 64, 80, 96, 112, 128, 160, 192, 224, 256, 384, 512], 'MAX_LAYERS': 15, 'MIN_LAYERS': 2, 'CROMOSOME_SIZE': 8, 'ACTIVATION_FUNCTIONS': ['ReLU', 'ELU', 'Sigmoid', 'Tanh']}
+2025-05-21 18:55:31,588 - all_search_mnist - INFO - Loading CIFAR10 data...
+2025-05-21 18:55:31,833 - all_search_mnist - INFO - 
+=== Random Search ===
+2025-05-21 18:56:53,070 - all_search_mnist - INFO - Best architecture found (random search on mnist):
+2025-05-21 18:56:53,070 - all_search_mnist - INFO - [{'type': 'Conv', 'filters': 8, 'kernel': 5, 'stride': 4}, {'type': 'FC', 'size': 96, 'activation': <class 'torch.nn.modules.activation.Tanh'>}]
+2025-05-21 18:56:53,070 - all_search_mnist - INFO - 
+=== Training best model (random search on mnist) ===
+2025-05-21 18:57:09,785 - all_search_mnist - INFO - train accuracy :  94.8194 
+2025-05-21 18:57:09,785 - all_search_mnist - INFO - train loss :  0.0825
+2025-05-21 18:57:09,785 - all_search_mnist - INFO - Test accuracy: 97.1900
+2025-05-21 18:57:09,785 - all_search_mnist - INFO - Test loss: 0.0854
+2025-05-21 18:57:20,183 - all_search_mnist - INFO - 
+=== Genetic Search ===
+2025-05-21 19:02:29,137 - all_search_mnist - INFO - Best architecture found (genetic search on mnist):
+2025-05-21 19:02:29,138 - all_search_mnist - INFO - [{'type': 'Conv', 'filters': 16, 'kernel': 7, 'stride': 1}, {'type': 'FC', 'size': 224, 'activation': <class 'torch.nn.modules.activation.Tanh'>}, {'type': 'FC', 'size': 24, 'activation': <class 'torch.nn.modules.activation.ReLU'>}]
+2025-05-21 19:02:29,138 - all_search_mnist - INFO - 
+=== Training best model (genetic search on mnist) ===
+2025-05-21 19:03:17,034 - all_search_mnist - INFO - train accuracy :  97.1972 
+2025-05-21 19:03:17,034 - all_search_mnist - INFO - train loss :  0.0369
+2025-05-21 19:03:17,034 - all_search_mnist - INFO - Test accuracy: 98.4400
+2025-05-21 19:03:17,034 - all_search_mnist - INFO - Test loss: 0.0503
+2025-05-21 19:03:40,619 - all_search_mnist - INFO - 
+=== Firefly Search ===
+2025-05-21 19:07:29,345 - all_search_mnist - INFO - Best architecture found (firefly search on mnist):
+2025-05-21 19:07:29,345 - all_search_mnist - INFO - [{'type': 'Conv', 'filters': 32, 'kernel': 5, 'stride': 2}, {'type': 'FC', 'size': 192, 'activation': <class 'torch.nn.modules.activation.Tanh'>}, {'type': 'FC', 'size': 16, 'activation': <class 'torch.nn.modules.activation.ReLU'>}, {'type': 'FC', 'size': 160, 'activation': <class 'torch.nn.modules.activation.ReLU'>}, {'type': 'FC', 'size': 112, 'activation': <class 'torch.nn.modules.activation.Tanh'>}]
+2025-05-21 19:07:29,345 - all_search_mnist - INFO - 
+=== Training best model (firefly search on mnist) ===
+2025-05-21 19:07:56,415 - all_search_mnist - INFO - train accuracy :  92.8483 
+2025-05-21 19:07:56,415 - all_search_mnist - INFO - train loss :  0.0420
+2025-05-21 19:07:56,415 - all_search_mnist - INFO - Test accuracy: 98.2100
+2025-05-21 19:07:56,415 - all_search_mnist - INFO - Test loss: 0.0658
