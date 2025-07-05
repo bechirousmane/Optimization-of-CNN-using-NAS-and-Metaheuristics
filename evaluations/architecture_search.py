@@ -9,7 +9,6 @@ from optimizers.genetic_search import GeneticSearch
 from optimizers.firefly_search import FireFlySearch
 from search_spaces.searchSpaceConfig import Config
 from train.trainer import ModelTrainer
-from ressource.ressource_manager import ResourceManager
 from search_spaces.utils import build_torch_network
 
 
@@ -47,48 +46,45 @@ class ArchitectureSearch:
         if params:
             self.params.update(params)
         
-        
-        self.train_data = None
-        self.test_data = None
+    
         self.sub_train = None
         self.sub_test = None
+        self.class_names = None
         
         self.best_architectures = {}
         self.best_fitnesses = {}
         self.search_histories = {}
+        self.avg_fitness_history = {}
         self.trained_models = {}
         self.training_histories = {}
+        self.count_eval = {}
+        self.invalid_arch_history = {}
     
-    def load_data(self, data_name, n_sub_train=20000, n_sub_test=5000):
+    def load_data(self, data_name):
         """
-        Loads the full ~~data_name~~ data set and a subset for optimization.
+            Loads the subset for optimization.
 
-        Args:
-            data_name (str) : Data name. must be cifar for CIFAR-10 data or mnist for MNIST data
-            n_sub_train (int): Number of training samples for optimization.
-            n_sub_test (int): Number of test samples for optimization.
+            Args:
+                data_name (str) : Data name. must be cifar for CIFAR-10 data or mnist for MNIST data
         """
+        print(self.params)
         
         if data_name == 'mnist' : 
-            self.sub_train, self.sub_test = load_mnist(
-            n_train=n_sub_train, 
-            n_test=n_sub_test, 
+            self.sub_train, self.sub_test, self.class_names = load_mnist(
+            n_train=self.params["sub_train"], 
+            n_test=self.params["sub_test"], 
+            n_class=self.params['num_classes'],
             batch_size=self.params['batch_size']
             )
         
-            self.train_data, self.test_data = load_mnist(
-                batch_size=self.params['batch_size']
-            )
         elif data_name == 'cifar' :
-            self.sub_train, self.sub_test = load_cifar10(
-                n_train=n_sub_train, 
-                n_test=n_sub_test, 
+            self.sub_train, self.sub_test, self.class_names = load_cifar10(
+                n_train=self.params["sub_train"], 
+                n_test=self.params["sub_test"], 
+                n_class=self.params['num_classes'],
                 batch_size=self.params['batch_size']
             )
             
-            self.train_data, self.test_data = load_cifar10(
-                batch_size=self.params['batch_size']
-            )
         
         else :
             raise ValueError("data name unsupported.")
@@ -118,6 +114,9 @@ class ArchitectureSearch:
         self.best_architectures['random'] = best_arch
         self.best_fitnesses['random'] = best_fitness
         self.search_histories['random'] = history
+        self.count_eval['random'] = random_search.count_eval
+        self.avg_fitness_history['random'] = random_search.avg_fitness_history
+        self.invalid_arch_history['random'] = random_search.invalid_arch_history
         
         return best_arch, best_fitness, history
     
@@ -160,6 +159,9 @@ class ArchitectureSearch:
         self.best_architectures['genetic'] = best_arch
         self.best_fitnesses['genetic'] = best_fitness
         self.search_histories['genetic'] = history
+        self.count_eval['genetic'] = genetic_search.count_eval
+        self.avg_fitness_history['genetic'] = genetic_search.avg_fitness_history
+        self.invalid_arch_history['genetic'] = genetic_search.invalid_arch_history
         
         return best_arch, best_fitness, history
     
@@ -201,6 +203,9 @@ class ArchitectureSearch:
         self.best_architectures['firefly'] = best_arch
         self.best_fitnesses['firefly'] = best_fitness
         self.search_histories['firefly'] = history
+        self.count_eval['firefly'] = firefly_search.count_eval
+        self.avg_fitness_history['firefly'] = firefly_search.avg_fitness_history
+        self.invalid_arch_history['firefly'] = firefly_search.invalid_arch_history
         
         return best_arch, best_fitness, history
     
@@ -232,8 +237,8 @@ class ArchitectureSearch:
             device=self.params['device'],
             lr=self.params['lr'],
             epochs=epochs,
-            train_loader=self.train_data,
-            test_loader=self.test_data,
+            train_loader=self.sub_train,
+            test_loader=self.sub_test,
             optimizer=self.params['optimizer']
         )
         
@@ -273,8 +278,9 @@ class ArchitectureSearch:
         
         if save_path:
             plt.savefig(save_path)
-            
-        plt.show()
+            plt.close()
+        else : 
+            plt.show()
     
     def plot_confusion_matrix(self, search_type='random', save_path=None):
         """
@@ -295,7 +301,7 @@ class ArchitectureSearch:
         all_targets = []
         
         with torch.no_grad():
-            for data, targets in self.test_data:
+            for data, targets in self.sub_test:
                 data, targets = data.to(device), targets.to(device)
                 outputs = model(data)
                 _, predicted = torch.max(outputs, 1)
@@ -304,7 +310,7 @@ class ArchitectureSearch:
                 all_targets.extend(targets.cpu().numpy())
         
         cm = confusion_matrix(all_targets, all_preds)
-        disp = ConfusionMatrixDisplay(confusion_matrix=cm)
+        disp = ConfusionMatrixDisplay(confusion_matrix=cm,display_labels=self.class_names)
         
         plt.figure(figsize=(10, 8))
         disp.plot(cmap=plt.cm.Blues)
@@ -312,8 +318,43 @@ class ArchitectureSearch:
         
         if save_path:
             plt.savefig(save_path)
+            plt.close()
+        else :
+            plt.show()
+
+    def plot_invalid_arch_hist(self, search_type="random", title = None, save_path=None) :
+        """
+            Displays the model's training history.
+
+            Args:
+                search_type (str): Search type.
+                title (str, optional): Chart title.
+                save_path (str, optional): Path to save the chart.
+        """
+        if search_type not in self.invalid_arch_history:
+            raise ValueError(f"No invalid architecture history for the type'{search_type}'")
+        
+        invalid_arch_history = self.invalid_arch_history[search_type]
+        
+        plt.figure(figsize=(10, 6))
+        plt.plot(range(len(invalid_arch_history)), invalid_arch_history)
+        
+        if title:
+            plt.title(title)
+        else:
+            plt.title(f"Courbe d'evolution du nombre d'architecture invalide pour l'algorithme {search_type}")
             
-        plt.show()
+        plt.xlabel("generation")
+        plt.ylabel("invalid arch nbr")
+        plt.grid(True, which="both", linestyle="--", linewidth=0.5)
+        
+        if save_path:
+            plt.savefig(save_path)
+            plt.close()
+
+        else :
+            plt.show()
+
     
     def compare_search_methods(self, methods=None):
         """
@@ -336,6 +377,6 @@ class ArchitectureSearch:
         
         for method in methods:
             fitness = self.best_fitnesses[method]
-            accuracy = self.train_best_model(search_type=method, verbose=False)[0]
+            _,_,accuracy,_ = self.train_best_model(search_type=method, verbose=False)
             print(f"{method:<15} | {fitness:<20.4f} | {accuracy:<15.4f}")
 

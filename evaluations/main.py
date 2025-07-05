@@ -2,6 +2,7 @@
 Main execution script for CIFAR10 architecture search
 """
 
+import random
 import torch
 import argparse
 import os
@@ -52,7 +53,7 @@ def save_results(search_type, best_arch, best_fitness, history, accuracy, loss, 
     return filename
 
 
-def plot_comparison(results, title="Comparison of Search Algorithms", save_path="./results"):
+def plot_comparison(results, title="Comparison of Search Algorithms", save_path="./results", file_name = "best_fitness_compar"):
     """Plot comparison of different search algorithms.
     
     Args:
@@ -65,8 +66,8 @@ def plot_comparison(results, title="Comparison of Search Algorithms", save_path=
     for algo, history in results.items():
         plt.semilogy(history, label=f"{algo} search")
     
-    plt.xlabel("Models evaluated")
-    plt.ylabel("Best Fitness")
+    plt.xlabel("generation")
+    plt.ylabel("score")
     plt.title(title)
     plt.legend()
     plt.grid(True, linestyle='--', alpha=0.7)
@@ -76,7 +77,7 @@ def plot_comparison(results, title="Comparison of Search Algorithms", save_path=
     
     # Save plot
     timestamp = time.strftime("%Y%m%d-%H%M%S")
-    filename = f"{save_path}/algorithm_comparison_{timestamp}.png"
+    filename = f"{save_path}/{file_name}_{timestamp}.png"
     plt.savefig(filename)
     plt.close()
     
@@ -90,7 +91,7 @@ def main():
     parser = argparse.ArgumentParser(description='Neural Architecture Search for CIFAR10')
     parser.add_argument('algorithm', type=str, choices=['random', 'genetic', 'firefly', 'all'],
                         help='Search algorithm to execute (random, genetic, firefly, all)')
-    parser.add_argument('--config', type=str, default="../config.json",
+    parser.add_argument('--config', type=str, default="config.json",
                         help='Path to configuration file')
     parser.add_argument('--epochs', type=int, default=10,
                         help='Number of epochs for search phase')
@@ -102,17 +103,19 @@ def main():
                         help='Population size')
     parser.add_argument('--iterations', type=int, default=15,
                         help='Number of search iterations')
-    parser.add_argument('--sub-train', type=int, default=20000,
+    parser.add_argument('--sub-train', type=int, default=60000,
                         help='Number of training samples for optimization')
-    parser.add_argument('--sub-test', type=int, default=5000,
+    parser.add_argument('--sub-test', type=int, default=10000,
                         help='Number of test samples for optimization')
+    parser.add_argument('--n-class', type=int, default=10,
+                        help='Number of class to use')
     parser.add_argument('--output-dir', type=str, default="./results",
                         help='Directory to save results')
     parser.add_argument('--seed', type=int, default=42,
                         help='Random seed for reproducibility')
     parser.add_argument('--data',type=str,default='mnist', choices=['mnist','cifar'],
                         help='The data for training')
-    parser.add_argument('--input-dim', type=tuple, default=(1,28,28),
+    parser.add_argument('--input-dim', type=lambda s : tuple(map(int, s.split(','))), default=(1,28,28),
                         help='The input shape')
     
     # Add algorithm-specific parameters
@@ -120,7 +123,7 @@ def main():
                         help='Mutation rate for genetic algorithm')
     parser.add_argument('--tournament-size', type=int, default=5,
                         help='Tournament size for genetic algorithm')
-    parser.add_argument('--crossover-prob', type=float, default=.75,
+    parser.add_argument('--crossover-prob', type=float, default=.80,
                        help='Crossover probability for genetic algorithm')
     
     
@@ -145,6 +148,7 @@ def main():
     # Set random seeds for reproducibility
     torch.manual_seed(args.seed)
     np.random.seed(args.seed)
+    random.seed(args.seed)
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = False
     
@@ -157,7 +161,9 @@ def main():
         'data' : args.data,
         'input_shape': args.input_dim,
         'optimizer': "AdamW",
-        'num_classes': 10,
+        'num_classes': args.n_class,
+        "sub_train" : args.sub_train,
+        "sub_test" :args.sub_test ,
         'seed': args.seed,
         "input_shape" : args.input_dim
     }
@@ -172,9 +178,9 @@ def main():
     logger.info("Loaded configuration:")
     logger.info(Config.get_config_as_dict())
     
-    # Load CIFAR10 data
-    logger.info("Loading CIFAR10 data...")
-    arch_search.load_data(data_name=args.data, n_sub_train=args.sub_train, n_sub_test=args.sub_test)
+    # Load  data
+    logger.info(f"Loading {args.data} data...")
+    arch_search.load_data(data_name=args.data)
     
     # Create directories for results
     os.makedirs(args.output_dir, exist_ok=True)
@@ -221,6 +227,8 @@ def main():
         # Display best architecture
         logger.info(f"Best architecture found ({search_type} search on {args.data}):")
         logger.info(best_arch)
+        logger.info(f"Best score : {best_fitness}")
+        logger.info(f"Models evaluated : {arch_search.count_eval[search_type]}")
         
         # Train the best model
         logger.info(f"\n=== Training best model ({search_type} search on {args.data}) ===")
@@ -233,16 +241,6 @@ def main():
         logger.info(f"Test accuracy: {test_accuracy:.4f}")
         logger.info(f"Test loss: {test_loss:.4f}")
         
-        # Save results
-        # save_results(
-        #     search_type=search_type,
-        #     best_arch=best_arch,
-        #     best_fitness=best_fitness,
-        #     history=history,
-        #     accuracy=accuracy,
-        #     loss=loss,
-        #     path=args.output_dir
-        # )
         
         # Display training curve
         arch_search.plot_training_history(
@@ -256,11 +254,15 @@ def main():
             search_type=search_type,
             save_path=os.path.join(args.output_dir, f"{search_type}_{args.data}_confusion_matrix.png")
         )
+
+        # Display invalid architecture curve
+        arch_search.plot_invalid_arch_hist(search_type=search_type, save_path=os.path.join(args.output_dir,f"{search_type}_{args.data}_invalid_arch.png"))
     
     # Plot comparison if multiple algorithms were run
     if len(all_results) > 1:
-        plot_comparison(all_results, title="Comparison of Search Algorithms", save_path=args.output_dir)
-
+        plot_comparison(all_results, title=f"Comparaison de la vitesse de convergence sur {args.data}", save_path=args.output_dir, file_name=f"best_fitness_compar_{args.data}")
+        plot_comparison(arch_search.avg_fitness_history, title=f"Comparaison de score moyen de la population sur {args.data}", save_path=args.output_dir, file_name=f"avg_fitness_compar_{args.data}")
+        arch_search.compare_search_methods()
 
 if __name__ == "__main__":
     # Check GPU availability

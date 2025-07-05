@@ -65,7 +65,10 @@ class GeneticSearch:
         self.resource_manager = ResourceManager(use_gpu=use_gpu, max_concurrent=max_concurrent)
         self.history = []
         self.best_fitness = 0
+        self.avg_fitness_history = []
         self.count_eval = 0
+        self.invalid_arch_count = 0
+        self.invalid_arch_history = []
         self.best_architecture = None
 
     
@@ -80,10 +83,7 @@ class GeneticSearch:
         Returns:
             float: fitness score normalized between 0 and 1
                   or 0 if the architecture is invalid
-        """
-        if not is_valid_architecture(architecture):
-            return 0.0
-        
+        """        
         try:
             # Build the network
             model = build_torch_network(
@@ -120,6 +120,7 @@ class GeneticSearch:
             
         except Exception as e:
  #           print(f"Error evaluating architecture: {e}")
+            self.invalid_arch_count += 1
             return 0.0
 
     async def evaluate_population(self, population):
@@ -154,7 +155,7 @@ class GeneticSearch:
                 self.best_architecture = architecture
                 print(f"New best architecture found with fitness: {fitness}")
            
-            self.history.append(self.best_fitness)
+            
 
         
         return fitness_scores
@@ -195,9 +196,15 @@ class GeneticSearch:
 
         # Evaluate initial population
         population_with_fitness = await self.evaluate_population(current_population)
+
+        current_fitness = [f for _, f in population_with_fitness]
+        avg_fitness = sum(current_fitness) / len(current_fitness)
+        self.invalid_arch_history.append(self.invalid_arch_count)
             
         for iteration in range(self.iterations):
             print(f"Iteration {iteration+1}/{self.iterations}")
+
+            self.invalid_arch_count = 0
             
             # Create new generation
             new_generation = []
@@ -228,8 +235,9 @@ class GeneticSearch:
                 mutated_binary = mutate(child_binary, self.mutation_rate)
                 mutated_child = binary_to_architecture(mutated_binary)
                 
-                if is_valid_architecture(mutated_child):
-                    new_generation.append(mutated_child)
+                new_generation.append(mutated_child)
+               # if is_valid_architecture(mutated_child):
+                #    new_generation.append(mutated_child)
             
             # Trim to population size if needed
             new_generation = new_generation[:self.population_size]
@@ -237,6 +245,9 @@ class GeneticSearch:
             # Evaluate new generation
             population_with_fitness = await self.evaluate_population(new_generation)
             
+            self.history.append(self.best_fitness)
+            self.avg_fitness_history.append(avg_fitness)
+            self.invalid_arch_history.append(self.invalid_arch_count)
             # Print statistics
             current_fitness = [f for _, f in population_with_fitness]
             avg_fitness = sum(current_fitness) / len(current_fitness)

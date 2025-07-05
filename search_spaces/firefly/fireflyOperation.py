@@ -43,12 +43,15 @@ def moveFirefly(alpha:float, beta0:float, gamma:float, firefly:np.array, brighte
     rand = np.random.uniform(0, 1, size=firefly.shape)
     newFirefly = firefly + attractiveness * (brightest_firefly - firefly) + alpha * (rand - 0.5)
     # Make sure the new firefly has valid integer values
-    newFirefly = np.round(newFirefly).astype(int)
+    newFirefly = randomRounding(newFirefly)
     
     # Make sure the firefly is within the valid architecture space
     newFirefly = validateFirefly(newFirefly)
     
     return newFirefly
+
+def randomRounding(vector) :
+    return np.ceil(vector).astype(int) if random.random() < 1/2 else np.floor(vector).astype(int)
 
 def validateFirefly(firefly:np.array)->np.array:
     """
@@ -81,48 +84,6 @@ def validateFirefly(firefly:np.array)->np.array:
             
         else:  # None layer
             layers[i, :] = 0  # Reset all parameters
-    
-    # Ensure architectural constraints
-    # First layer must be Conv
-    if layers[0, 0] != 1:
-        layers[0, 0] = 1
-        layers[0, 1] = random.randint(0, len(Config.FILTERS_MAP) - 1)
-        layers[0, 2] = random.randint(0, len(Config.KERNEL_MAP) - 1)
-        layers[0, 3] = random.randint(0, len(Config.STRIDE_MAP) - 1)
-    
-    # No consecutive Pool layers
-    for i in range(Config.MAX_LAYERS - 1):
-        if layers[i, 0] == 2 and layers[i+1, 0] == 2:
-            # Change the second pool to a conv
-            layers[i+1, 0] = 1
-            layers[i+1, 1] = random.randint(0, len(Config.FILTERS_MAP) - 1)
-            layers[i+1, 2] = random.randint(0, len(Config.KERNEL_MAP) - 1)
-            layers[i+1, 3] = random.randint(0, len(Config.STRIDE_MAP) - 1)
-    
-    # Ensure at least one FC layer at the end
-    has_fc = False
-    last_fc_index = -1
-    
-    for i in range(Config.MAX_LAYERS):
-        if layers[i, 0] == 3:
-            has_fc = True
-            last_fc_index = i
-    
-    if not has_fc:
-        # Add FC layer at the second-to-last position
-        layers[Config.MIN_LAYERS-1, 0] = 3
-        layers[Config.MIN_LAYERS-1, 1] = random.randint(0, len(Config.FC_SIZES) - 1)
-        layers[Config.MIN_LAYERS-1, 2] = random.randint(0, len(Config.ACTIVATION_FUNCTIONS) - 1)
-        layers[Config.MIN_LAYERS-1, 3] = 0
-        last_fc_index = Config.MIN_LAYERS-1
-    
-    # All layers after the last FC must be FC
-    for i in range(last_fc_index+1, Config.MAX_LAYERS):
-        if layers[i, 0] != 0:  # If it's not a None layer, make it FC
-            layers[i, 0] = 3
-            layers[i, 1] = random.randint(0, len(Config.FC_SIZES) - 1)
-            layers[i, 2] = random.randint(0, len(Config.ACTIVATION_FUNCTIONS) - 1)
-            layers[i, 3] = 0
     
     # Flatten back to 1D array
     return layers.flatten()

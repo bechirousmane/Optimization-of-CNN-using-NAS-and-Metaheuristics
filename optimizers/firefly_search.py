@@ -63,7 +63,10 @@ class FireFlySearch:
         self.resource_manager = ResourceManager(use_gpu=use_gpu, max_concurrent=max_concurrent)
         self.history = []
         self.best_fitness = 0
+        self.avg_fitness_history = []
         self.count_eval = 0
+        self.invalid_arch_history = []
+        self.invalid_arch_count = 0
         self.best_architecture = None
 
     
@@ -79,8 +82,6 @@ class FireFlySearch:
             float: fitness score normalized between 0 and 1
                   or 0 if the architecture is invalid
         """
-        if not is_valid_architecture(architecture):
-            return 0.0
         
         try:
             # Build the network
@@ -117,6 +118,7 @@ class FireFlySearch:
             return fitness
             
         except Exception as e:
+            self.invalid_arch_count += 1
  #           print(f"Error evaluating architecture: {e}")
             return 0.0
 
@@ -150,7 +152,7 @@ class FireFlySearch:
                 self.best_fitness = fitness
                 self.best_architecture = architecture
                 print(f"New best architecture found with fitness: {fitness}")
-            self.history.append(self.best_fitness)
+            
 
         return fitness_scores
 
@@ -167,66 +169,93 @@ class FireFlySearch:
 
         # Evaluate initial population
         fitness_results = await self.evaluate_population(population)
+        avg_fitness = sum(fitness for _, fitness in fitness_results) / len(fitness_results)
                 
+        self.invalid_arch_history.append(self.invalid_arch_count)
         for iteration in range(self.iterations):
+            
             print(f"Iteration {iteration+1}/{self.iterations}")
+
+            self.invalid_arch_count = 0
             
             # Adjust alpha for gradual reduction (exploration to exploitation)
             current_alpha = self.alpha * (0.97 ** iteration)
             
             # Reduce sigma over iterations for better convergence
-            current_sigma = self.sigma0 * (1 - iteration/self.iterations)
+            current_sigma = self.sigma0 * (1 - iteration/(10*self.iterations))
             
             # Sort fireflies by brightness (fitness)
             fitness_results.sort(key=lambda x: x[1], reverse=True)
             
             new_generation = []
+
+            max_attempts = self.population_size * 10  # Limit to avoid infinite loop
+            attempts = 0
             
-            for i in range(len(fitness_results) - 1):
-                arch_i, fitness_i = fitness_results[i]
-                firefly_i = architecture_to_vector(arch_i)
-                new_firefly = firefly_i.copy()
-                
-                # Compare with all brighter fireflies
-                for j in range(i):
-                    arch_j, fitness_j = fitness_results[j]
+            while len(new_generation) < self.population_size and attempts < max_attempts :
+                for i in range(len(fitness_results)):
+                    arch_i, fitness_i = fitness_results[i]
+                    firefly_i = architecture_to_vector(arch_i)
+                    new_firefly = firefly_i.copy()
+
+                    moved = False
                     
-                    # Only move towards brighter fireflies
-                    if fitness_j > fitness_i:
-                        brightest_firefly = architecture_to_vector(arch_j)
+                    
+                    # Compare with all brighter fireflies
+                    for j in range(i):
+                        arch_j, fitness_j = fitness_results[j]
                         
-                        # Move firefly i towards firefly j using standard movement
-                        new_firefly = moveFirefly(
-                            alpha=current_alpha,
-                            beta0=self.beta0,
-                            gamma=self.gamma,
-                            firefly=new_firefly, 
-                            brightest_firefly=brightest_firefly
-                        )
-                        
-                        # With probability prob, use multivariate normal distribution for diversity
-                        if random.random() <= self.prob:
-                            # Create covariance matrix - diagonal matrix with current_sigma values
-                            cov_matrix = np.eye(len(new_firefly)) * current_sigma
+                        # Only move towards brighter fireflies
+                        if fitness_j > fitness_i:
+                            brightest_firefly = architecture_to_vector(arch_j)
                             
-                            # Generate random perturbation using multivariate normal distribution
-                            perturbation = np.random.multivariate_normal(
-                                mean=brightest_firefly,  
-                                cov=cov_matrix                   
+                            # Move firefly i towards firefly j using standard movement
+                            new_firefly = moveFirefly(
+                                alpha=current_alpha,
+                                beta0=self.beta0,
+                                gamma=self.gamma,
+                                firefly=new_firefly, 
+                                brightest_firefly=brightest_firefly
                             )
                             
-                            # Apply perturbation to the firefly
-                            new_firefly = brightest_firefly + perturbation
-                            
-                            # Ensure integer values
-                            new_firefly = np.round(new_firefly).astype(int)
-                            
-                            # Validate the firefly to ensure it represents a valid architecture
-                            new_firefly = validateFirefly(new_firefly)
+                            # With probability prob, use multivariate normal distribution for diversity
+                            if random.random() <= self.prob:
+                                # Create covariance matrix - diagonal matrix with current_sigma values
+                                cov_matrix = np.eye(len(new_firefly)) * current_sigma
+                                
+                                # Generate random perturbation using multivariate normal distribution
+                                perturbation = np.random.multivariate_normal(
+                                    mean=np.zeros(len(new_firefly)),  
+                                    cov=cov_matrix                   
+                                )
+                                
+                                # Apply perturbation to the firefly
+                                new_firefly = new_firefly + perturbation
+                                
+                                # Ensure integer values
+                                new_firefly = randomRounding(new_firefly).astype(int)
+                                
+                                # Validate the firefly to ensure it represents a valid architecture
+                                new_firefly = validateFirefly(new_firefly)
 
-                if not np.array_equal(new_firefly, firefly_i):
-                    new_arch = vector_to_achitecture(new_firefly)
-                    new_generation.append(new_arch)
+                            moved = True
+
+                            break  # Move towards first brighter firefly found
+
+                    # If no movement and not the best firefly, add random perturbation
+                    if not moved and i > 0:
+                        perturbation = np.random.normal(0, current_alpha, len(new_firefly))
+                        new_firefly = firefly_i + perturbation
+
+                        # Ensure integer values and validate
+                        new_firefly = randomRounding(new_firefly).astype(int)
+                        new_firefly = validateFirefly(new_firefly)
+
+                    if not np.array_equal(new_firefly, firefly_i) and all(not np.array_equal(new_firefly,firefly) for firefly in new_generation) and is_valid_architecture(vector_to_achitecture(new_firefly)):
+                        new_arch = vector_to_achitecture(new_firefly)
+                        new_generation.append(new_arch)
+                    
+                    attempts += 1
             
             # Evaluate new fireflies
             print(f"New generation size : {len(new_generation)}")
@@ -239,6 +268,9 @@ class FireFlySearch:
                 all_fireflies.sort(key=lambda x: x[1], reverse=True)
                 fitness_results = all_fireflies[:self.population_size]  # Keep population size constant
             
+            self.history.append(self.best_fitness)
+            self.avg_fitness_history.append(avg_fitness)
+            self.invalid_arch_history.append(self.invalid_arch_count)
             # Print statistics
             avg_fitness = sum(fitness for _, fitness in fitness_results) / len(fitness_results)
             print(f"Average fitness: {avg_fitness}")

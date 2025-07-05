@@ -44,13 +44,17 @@ class RandomSearch:
         self.lr = lr
         self.optimizer = optimizer
         self.resource_manager = ResourceManager(use_gpu=use_gpu, max_concurrent=max_concurrent)
+        self.count_eval = 0
+        self.invalid_arch_count = 0
+        self.invalid_arch_history = []
         
         # Store the best architecture and its fitness
         self.best_architecture = None
-        self.best_fitness = float('-inf')  # Higher fitness is better
+        self.best_fitness = 0
         
         # History of all evaluated architectures and their fitness
         self.history = []
+        self.avg_fitness_history = []
 
     async def evaluate_architecture(self, architecture, device):
         """
@@ -64,9 +68,7 @@ class RandomSearch:
             float: fitness score normalized between 0 and 1
                   or 0 if the architecture is invalid
         """
-        if not is_valid_architecture(architecture):
-            return 0.0
-        
+    
         try:
             # Build the network
             model = build_torch_network(
@@ -96,11 +98,13 @@ class RandomSearch:
             accuracy, test_loss = trainer.test()
             
             avg_loss = (train_loss + test_loss) / 2
-            fitness = 1/(1 + avg_loss)  
+            fitness = 1/(1 + avg_loss) 
+            self.count_eval += 1 
             
             return fitness
             
         except Exception as e:
+            self.invalid_arch_count += 1
  #           print(f"Error evaluating architecture: {e}")
             return 0.0
 
@@ -134,7 +138,7 @@ class RandomSearch:
                 self.best_fitness = fitness
                 self.best_architecture = architecture
                 print(f"New best architecture found with fitness: {fitness}")
-            self.history.append(self.best_fitness)
+            
         return fitness_scores
 
     def generate_population(self):
@@ -157,8 +161,9 @@ class RandomSearch:
         Returns:
             tuple: (best_architecture, best_fitness, history)
         """
-        for iteration in range(self.iterations):
-            print(f"Iteration {iteration+1}/{self.iterations}")
+        for iteration in range(self.iterations+1):
+            print(f"Iteration {iteration}/{self.iterations}")
+            self.invalid_arch_count = 0
             
             # Generate population
             population = self.generate_population()
@@ -166,10 +171,14 @@ class RandomSearch:
             # Evaluate population
             fitness_scores = await self.evaluate_population(population)
             
+            self.history.append(self.best_fitness)
+            self.invalid_arch_history.append(self.invalid_arch_count)
             # Print statistics
             avg_fitness = sum(fitness_scores) / len(fitness_scores)
+            self.avg_fitness_history.append(avg_fitness)
             print(f"Average fitness: {avg_fitness}")
             print(f"Best fitness so far: {self.best_fitness}")
+            print(f"Models evaluated : {self.count_eval}")
         
         return self.best_architecture, self.best_fitness, self.history
 

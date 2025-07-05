@@ -1,6 +1,7 @@
 import random
 import torch.nn as nn
 from search_spaces.searchSpaceConfig import Config
+import math
 
 def generate_valid_architecture()->list:
     """
@@ -9,7 +10,7 @@ def generate_valid_architecture()->list:
     """
     n = random.randint(Config.MIN_LAYERS, Config.MAX_LAYERS)
     
-    n_fc = random.randint(1, min(Config.MAX_LAYERS//2, n-1)) 
+    n_fc = random.randint(0, min(Config.MAX_LAYERS//2, n-1)) 
     n_main = n - n_fc
   
     layers = []
@@ -72,19 +73,20 @@ def is_valid_architecture(layers:list)->bool:
     # First layer will be Convolution layer
     if layers[0]["type"] != "Conv":
         return False
-    # Last layer will be fully connected layer and at least one FC required
+    
+    
     last_fc_index = None
     for i, layer in enumerate(layers):
         if layer["type"] == "FC":
             last_fc_index = i
             break
-    if last_fc_index is None:
-        return False
+    
     
     # All layers from last_fc_index must be FC
-    for l in layers[last_fc_index:]:
-        if l["type"] != "FC":
-            return False
+    if last_fc_index :
+        for l in layers[last_fc_index:]:
+            if l["type"] != "FC":
+                return False
     # Banned Pool or FC in first layer
     if layers[0]["type"] in ["Pool", "FC"]:
         return False
@@ -132,8 +134,8 @@ def build_torch_network(arch:list, input_shape=(3, 32, 32), num_classes=10):
             kernel_size = layer['kernel']
             stride = layer['stride']
             
-            current_height = int((current_height - kernel_size + 2*padding) / stride + 1)
-            current_width = int((current_width - kernel_size + 2*padding) / stride + 1)
+            current_height = math.floor((current_height - kernel_size + 2*padding) / stride + 1)
+            current_width = math.floor((current_width - kernel_size + 2*padding) / stride + 1)
             
             flatten_needed = True
             
@@ -149,8 +151,8 @@ def build_torch_network(arch:list, input_shape=(3, 32, 32), num_classes=10):
             kernel_size = layer['kernel']
             stride = layer['stride']
             
-            current_height = int((current_height - kernel_size + 2*padding) / stride + 1)
-            current_width = int((current_width - kernel_size + 2*padding) / stride + 1)
+            current_height = math.floor((current_height - kernel_size + 2*padding) / stride + 1)
+            current_width = math.floor((current_width - kernel_size + 2*padding) / stride + 1)
             
         elif layer['type'] == 'FC':
             if flatten_needed:
@@ -170,6 +172,5 @@ def build_torch_network(arch:list, input_shape=(3, 32, 32), num_classes=10):
         modules.append(nn.Flatten())
         in_features = current_channels * current_height * current_width
     modules.append(nn.Linear(in_features, num_classes, bias=True))
-    modules.append(nn.ReLU())
     
     return nn.Sequential(*modules)
