@@ -46,8 +46,6 @@ Some architectural parameters are **not included in the optimization process** a
 
 These choices make the search space manageable while allowing for flexible experimentation through configuration changes.
 
-
-
 ---
 
 ## Requirement
@@ -61,8 +59,6 @@ Before running this project, make sure you have the following Python packages in
 - [`Matplotlib`](https://matplotlib.org/) – for plotting and visualizing results
 
 - [`Scikit-learn`](https://scikit-learn.org/) – for additional metrics and data preprocessing
-
-
 
 ---
 
@@ -133,7 +129,6 @@ This project follows a modular and organized structure, supporting parallel exec
 │
 ├── config.json                   # User-defined search configuration (fixed & variable params)
 ├── requirements.txt              # Project dependencies
-
 ```
 
 ---
@@ -162,8 +157,6 @@ python3 evaluations/main.py [ALGORITHM] [OPTIONS]
 python3 evaluations/main.py genetic --config config.json --epochs 10 --final-epochs 30 --population 20 --iterations 15 --batch-size 128 --data mnist
 ```
 
-
-
 This command initiates a genetic algorithm-based NAS on the MNIST dataset, using the specified parameters.
 
 ### Command-Line Arguments
@@ -184,8 +177,6 @@ This command initiates a genetic algorithm-based NAS on the MNIST dataset, using
 | `--data`         | str   | `mnist`          | Dataset to use (`mnist`, `cifar`)                                   |
 | `--input-dim`    | tuple | `(1, 28, 28)`    | Input dimensions of the data                                        |
 
-
-
 Genetic Algorithm Specific Parameters
 
 | Argument            | Type  | Default | Description                   |
@@ -203,8 +194,6 @@ Firefly Algorithm Specific Parameters
 | `--gamma`  | float | `1.0`   | Gamma parameter                            |
 | `--sigma0` | float | `1.0`   | Standard deviation for normal distribution |
 | `--prob`   | float | `0.5`   | Probability to use normal distribution     |
-
-
 
 ### Configuration File (`config.json`)
 
