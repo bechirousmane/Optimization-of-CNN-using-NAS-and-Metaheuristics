@@ -218,3 +218,7 @@ This allows for a fully configurable yet controlled search space.
 ## License
 
 This project is licensed under the MIT License.
+
+# Report :
+[View the report](https://bechirousmane.github.io/Optimization-of-CNN-using-NAS-and-Metaheuristics/)  
+[pdf report](https://github.com/bechirousmane/Optimization-of-CNN-using-NAS-and-Metaheuristics/blob/main/rapport.pdf)
