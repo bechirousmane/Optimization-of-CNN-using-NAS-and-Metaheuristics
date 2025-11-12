@@ -1,0 +1,199 @@
+\documentclass[oneside,a4paper,onecolumn,11pt]{article}
+
+\usepackage{lipsum} 
+\usepackage{fullpage}
+\usepackage[left=2cm,top=2cm,bottom=2cm,right=2cm,includehead,nomarginpar,headheight=16pt]{geometry}
+\usepackage[ruled, linesnumbered, vlined, commentsnumbered]{algorithm2e}
+\usepackage{graphicx,subfig} % figures
+\usepackage{amsfonts,amssymb,amsmath,amsthm,amsopn,mathtools}	% maths
+\usepackage{booktabs,diagbox,colortbl,multirow,tabularx,threeparttable,hhline}
+\usepackage[listings,skins,breakable]{tcolorbox}
+\usepackage{fancyhdr,fancyhdr,nopageno,lastpage} % setting header and footer
+\usepackage{enumerate}
+\usepackage[shortlabels]{enumitem}
+\usepackage{csquotes}
+\usepackage{authblk}
+\usepackage{footnote}
+\usepackage[colorlinks=true,citecolor=reference,linkcolor=brightmaroon,backref=page]{hyperref}
+\usepackage{prettyref}
+\usepackage{cite}
+\usepackage{setspace}
+\usepackage{color}
+\usepackage{titlesec}
+\usepackage{soul}
+\usepackage{url}
+\usepackage{bm}
+\usepackage{xcolor}  % Required for custom colors
+\usepackage{csquotes}
+\usepackage{academicons}
+\usepackage{fontawesome5}
+\usepackage{pifont,ifsym,marvosym,manfnt} % math fonts
+\usepackage{tikz}
+\usepackage{xcolor}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\usepackage{graphicx}
+\usepackage{subcaption}
+\usepackage[margin=1in]{geometry}
+
+
+\usepackage{rotating}
+
+\def\hlinew#1{%
+  \noalign{\ifnum0=`}\fi\hrule \@height #1 \futurelet
+   \reserved@a\@xhline}
+\makeatother
+
+% Setting the header style
+\pagestyle{fancy}
+\renewcommand{\headrulewidth}{0pt} % Remove line at top
+\fancyhf[R]{}
+\fancyfoot[C]{}
+\fancyfoot[R]{ \thepage\ / \pageref{LastPage}}
+\fancyhead[L]{}
+\fancypagestyle{plain}{%
+    \renewcommand{\headrulewidth}{0pt}%
+    \fancyfoot[C]{}
+    \fancyfoot[R]{ \thepage\ / \pageref{LastPage}}
+}
+
+% Define hyperlink style
+\hypersetup{
+    colorlinks=true,
+    linkcolor=ultramarine,
+    filecolor=magenta,
+    urlcolor=ultramarine,
+    pdftitle={Overleaf Example},
+    pdfpagemode=FullScreen,
+}
+
+\setlist[itemize]{itemsep=0pt}
+\setlist[enumerate]{itemsep=0pt}
+
+% Define a few colors to make text stand out within the presentation
+\definecolor{navyblue}{RGB}{0, 0, 128}
+\definecolor{myblue}{RGB}{34,31,217}
+\definecolor{gray}{gray}{0.9}
+\definecolor{usccardinal}{rgb}{0.6, 0.0, 0.0}
+\definecolor{ultramarine}{RGB}{0,32,96}
+\definecolor{reference}{RGB}{4, 20, 110}
+
+\newtheorem{remark}{Remark}
+\newtheorem{theorem}{Theorem}
+\newtheorem{proposition}{Proposition}
+\newtheorem{corollary}{Corollary}
+\newtheorem{definition}{Definition}
+\newtheorem{lemma}{Lemma}
+\newtheorem{property}{Property}
+
+\newsavebox\newcaptionbox\newdimen\newcaptionboxwid
+\titlespacing*{\paragraph}{0pt}{0.75ex plus 0.75ex minus 0.2ex}{1.25ex plus 0.2ex}
+
+
+\newtcolorbox{quotebox}{
+    colback=lightpurple,
+    colframe=black!75,
+    boxrule=0pt,
+    top=5pt,
+    bottom=5pt,
+    left=8pt,
+    right=8pt,
+    arc=8pt,
+    boxsep=0pt,
+    toptitle=2pt,
+    bottomtitle=2pt,
+    fonttitle=\bfseries,
+}
+
+\newcommand\mycommfont[1]{\normalsize\ttfamily\textcolor{blue}{#1}}
+\SetCommentSty{mycommfont}
+
+\newcommand{\GS}[1]{{\color{blue}{#1}}}
+
+% Customization of mathematical expressions
+\newcommand{\setfont}[2]{{\fontfamily{#1}\selectfont #2}}
+\usepackage[T1,small,euler-digits]{eulervm}
+\newcommand{\I}{\mathrm{i}}
+
+% correct bad hyphenation here
+\hyphenation{op-tical net-works semi-conduc-tor}
+\newcommand{\pref}{\prettyref}
+\renewcommand\qedsymbol{$\blacksquare$}
+\usepackage{lscape}
+
+% Environment for code
+\newenvironment{code-example}
+{
+\vspace{0.15cm}
+\noindent\begin{minipage}{\linewidth}
+\begin{center}
+\arrayrulecolor{black}
+\color{black}
+\begin{tabular}{|p{0.95\linewidth}|}
+\hline%
+\rowcolor{pink!20}%
+}
+{
+\\\hline
+\end{tabular}
+\end{center}
+\end{minipage}
+\vspace{-0.2cm}
+}
+
+
+\begin{document}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% title
+\title{\vspace{-1ex}\LARGE\textbf{Optimisation hybride de réseaux de neurones convolutionnels via NAS et métaheuristiques inspirées des comportements naturels}}
+
+%% authors and affiliations
+\author[1]{\normalsize Bechir Ousmane Tom}
+\affil{\normalsize \textbf{Encadrant : Adán José-García} \textsuperscript{1,2}}\affil[1]{\normalsize Univ. Lille, Faculté de science et technologie}
+\affil[2]{\normalsize Univ. Lille, Inserm, CHU Lille, U1286 INFINITE, F-59000 Lille, France}
+
+
+\date{}
+\maketitle
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\vspace{-3ex}
+{\normalsize\textbf{Resumé : Dans ce travail, nous avons exploré une approche hybride pour l’optimisation des architectures de réseaux de neurones convolutionnels (CNN), combinant la recherche d’architecture neuronale (NAS) avec des algorithmes métaheuristiques inspirés des comportements naturels, en particulier l’algorithme génétique et l’algorithme Firefly. Après avoir défini un espace de recherche structuré pour les hyperparamètres architecturaux des CNNs, nous avons détaillé les mécanismes d’encodage, de sélection, de croisement et de mutation propres à chaque méthode. Les expériences menées sur les jeux de données MNIST et CIFAR-10 montrent que les approches métaheuristiques surpassent significativement la recherche aléatoire, tant en termes de précision que de capacité de généralisation. L’algorithme génétique, en particulier, se distingue par sa robustesse et son efficacité, démontrant l’intérêt des stratégies hybrides pour l’optimisation automatique des architectures de réseaux de neurones profonds.Notre implémentation complète de ces algorithmes est disponible sur GitHub au lien : \\https://github.com/bechirousmane/Optimization-of-CNN-using-NAS-and-Metaheuristics} }
+\\
+{\normalsize\textbf{Mots clés: NAS, CNN, optimisation, hyperparamètres, intelligence en essaim, algorithmes évolutionnaires, métaheuristiques } }
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Introduction}
+Les réseaux de neurones convolutionnels (CNN \cite{lecun1989backpropagation}) ont démontré une efficacité remarquable dans des nombreuses tâches de vision par ordinateur, telles que la classification d'images, la détection des objets ou la segmentation sémantique. Cependant, les performances de ces modèles dépendent fortement de choix de leur configuration interne, notamment des hyperparamètres qui régissent leur structure et leur fonctionnement. \\
+Des méthodes classiques d'optimisation, telles que la recherche par grille(grid search) ou la recherche aléatoire(random search)\cite{JMLR:v13:bergstra12a} ainsi que des approches probabilistes plus avancées comme l’optimisation bayésienne\cite{mockus1998application} sont souvent employées pour régler ces hyperparamètres. Cependant, elles ont une efficacité très limité face à la complexité de l’espace de recherche, surtout dans le cadre de problèmes \textbf{NP-difficiles}\cite{np-dure}.\\ 
+D'autres approches plus robustes et adaptées au problèmes \textbf{NP-difficiles}\cite{np-dure}, telles que les algorithmes évolutionnaires et les algorithmes basé sur l'intelligence en essaims ont été exploré. Parmi elles, ont retrouve les algorithmes génétiques (GA)\cite{GenCNN} l’algorithme de croissance d’arbres (Tree Growth Algorithm, TGA)\cite{cheraghalipour2018tree}, l’optimisation par essaim de particules (Particle Swarm Optimization, PSO)\cite{kennedy1995particle} ou l’algorithme des lucioles (Firefly Algorithm, FA)\cite{FAfoundation}. Ces approches ont montré des performances remarquables dans l'optimisation des hyperparamètres. Dans la littérature, le terme "hyperparamètre" désigne généralement des paramètres réglés manuellement avant l'entraînement, tels que le taux d'apprentissage, la taille du batch ou le nombre d’époques. Toutefois, un ensemble tout aussi crucial de paramètres concerne directement l’architecture du modèle : le nombre de couches, le nombre de filtres par couche, la taille des noyaux de convolution, ou encore le nombre de neurones dans les couches entièrement connectées. Ces éléments, bien qu’ils déterminent la topologie du réseau, sont aussi considérés comme des hyperparamètres dans un sens plus large, car ils influencent fortement la capacité d’apprentissage du modèle tout en étant fixés avant l'entraînement. C’est dans ce contexte que les approches de Neural Architecture Search (NAS)\cite{zoph2016neural} ont émergé. Ces méthodes visent à automatiser l’exploration de l’espace des architectures possibles pour trouver une configuration optimale. Ces dernières années, NAS\cite{zoph2016neural} s'est imposé comme une stratégie prometteuse pour trouver des architectures optimales, notamment dans la classification d'images(Liu et al\cite{Liu_2018_ECCV}, Tan et le\cite{pmlr-v97-tan19a}).\\
+Dans ce travail, nous explorons une approche hybride de NAS combinée à des algorithmes métaheuristiques, en particulier l’algorithme génétique et l’algorithme Firefly, afin d’optimiser les hyperparamètres structurels des CNNs.
+
+
+% Revue de la litérrature
+\input{contenues/revue_de_la_literrature}
+
+
+% Espace de recherche
+\input{contenues/espace_de_recherche}
+
+% Algo génétique
+\input{contenues/algorithme_genetique}
+
+% Algo firefly
+\input{contenues/algorithme_firefly}
+
+%Experiences
+\input{contenues/Experiences}
+
+% Conclusion
+\input{contenues/conclusion}
+
+
+\bibliographystyle{IEEEtran}
+\bibliography{bibliographie}
+
+
+\end{document}

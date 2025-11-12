@@ -1,0 +1,21 @@
+\section{Définition de l'espace de recherche}
+La configuration de l'espace de recherche est une étape cruciale incluant le choix des hyperparamètres à optimiser et les intervalles pour chaque hyperparamètre. Pour des raisons d'insuffisance de ressource, nous avons fait le choix d'optimiser un ensemble restreint mais représentatif d'hyperparamètres architecturaux des CNNs.\\
+Nos choix repose sur la définition d’intervalles discrets pour les principaux hyperparamètres structuraux des réseaux convolutifs. Ces hyperparamètres ont été sélectionnés de manière à offrir une variabilité suffisante tout en maintenant un cadre d’exploration maîtrisable.\\
+Pour les couches convolutionnelles, quatre valeurs discrètes ont été retenues pour chacun des paramètres suivants : le nombre de filtres, la taille du noyau et le stride. Le padding a quant à lui été fixé à 1 afin de conserver les dimensions spatiales d’entrée. Ces choix permettent de contrôler à la fois la capacité de représentation des couches, la granularité des caractéristiques extraites et le taux de réduction spatiale.
+Les couches de pooling suivent une configuration similaire. La taille du noyau et le stride sont également choisis parmi quatre valeurs discrètes, tandis que le padding est fixé à 1. Le type de pooling utilisé est exclusivement MaxPool2d, ce qui garantit une invariance spatiale efficace tout en limitant la complexité de l’espace de recherche.
+S’agissant des couches entièrement connectées, la taille de chaque couche est choisie parmi un ensemble de seize valeurs discrètes, couvrant un spectre suffisamment large pour s’adapter à différentes profondeurs et configurations. Par ailleurs, la fonction d’activation utilisée dans ces couches est sélectionnée parmi quatre options distinctes, introduisant une variabilité supplémentaire au niveau de la non-linéarité du modèle.
+Enfin, le nombre total de couches dans les architectures générées est contraint à appartenir à l’intervalle $[2, 10]$, ce qui permet de contrôler la profondeur du réseau tout en assurant une diversité architecturale.\\ En combinant les différentes valeurs possibles des hyperparamètres et en tenant compte des contraintes structurelles (position des couches, absence de pooling consécutif, etc.), l’espace de recherche atteint une complexité combinatoire très élevée.Pour chaque architecture de longueur $L \in [2,10]$, et pour chaque possible nombre de couches entièrement connectées $k \in [1,L - 1]$, le nombre de séquences valides de $n=L - k$ couches convolutionnelles et de pooling est noté $F(n)$. Chaque séquence valide est ensuite associée à un nombre de configurations d’hyperparamètres donné par : \\
+
+$(4\times4\times4)^{\text{nb Conv}} \times (4\times4)^{\text{nb Pool}} \times (16\times4)^{k} = 64^{\text{nb Conv}} \times 16^{\text{nb Pool}} \times 64^{k}$ \\ 
+
+Ainsi, le nombre total d’architectures $N$ peut être exprimé comme suit : \\
+
+$N = \sum_{L=2}^{10} \sum_{k=1}^{L-1} \left[ \sum_{\text{séquences valides de longueur } n = L-k} \left( 64^{\text{nb Conv}} \times 16^{\text{nb Pool}} \times 64^{k} \right) \right]$\\
+
+Cette estimation démontre que le nombre total d’architectures possibles est astronomique, rendant toute exploration exhaustive irréaliste. Ce constat justifie le recours à des méthodes d’optimisation métaheuristiques, telles que les algorithmes évolutionnaires, pour naviguer efficacement dans cet espace complexe.
+\begin{figure}
+    \centering
+    \includegraphics[width=0.7\linewidth]{front/Espace_recherche.png}
+    \caption{Espace de recherche}
+    \label{fig:enter-label}
+\end{figure}

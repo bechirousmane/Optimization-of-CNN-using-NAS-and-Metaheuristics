@@ -1,0 +1,162 @@
+\section{Algorithme Firefly}
+L'algorithme de lucioles(Firefly)\cite{FAfoundation} est une méta-heuristique inspirer du comportement de clignotement des lucioles pour s'attirer mutuellement. Il permet d'explorer l'espace de recherche des architectures de réseaux de neurones en appliquant les principes suivants :
+
+\subsection{Principe de base}
+L'algorithme simule le comportement des lucioles qui émettent de la lumière pour attirer leurs congénères. Dans ce contexte, chaque luciole représente une solution candidate (une architecture de réseau de neurones), et l'intensité lumineuse correspond à la qualité de cette solution selon une fonction objectif donnée.
+
+\subsection{Mécanisme d'attraction}
+Le mouvement des lucioles est régi par deux règles fondamentales :
+\begin{enumerate}
+    \item Toutes les lucioles sont unisexes et s'attirent mutuellement
+    \item L'attractivité est proportionnelle à la brillance, qui diminue avec la distance
+\end{enumerate}
+
+\subsection{Représentation de l'espace de recherche}
+
+Pour appliquer l'algorithme Firefly à l'optimisation d'architectures de réseaux de neurones convolutionnels (CNN), il est nécessaire de définir une représentation efficace de l'espace de recherche qui permette les opérations mathématiques requises par l'algorithme.
+
+\subsubsection{Encodage vectoriel des architectures}
+
+Chaque architecture de réseau de neurones est représentée sous forme de vecteur numérique de taille fixe. Cette approche permet de traiter les architectures comme des points dans un espace euclidien, facilitant ainsi le calcul des distances et les opérations de déplacement des lucioles.
+
+\subsubsection*{Mapping des composants architecturaux}
+Les différents types de couches sont encodés par des valeurs entières discrètes. Cette discretisation permet de transformer l'espace de recherche architectural en un espace numérique manipulable :
+
+\begin{equation}
+\text{Type de couche} = \begin{cases}
+0 & \text{absence de couche} \\
+1 & \text{couche convolutionnelle} \\
+2 & \text{couche de pooling} \\
+3 & \text{couche entièrement connectée}
+\end{cases}
+\end{equation}
+
+De manière similaire, les paramètres de chaque type de couche sont mappés vers des indices entiers correspondant à des valeurs prédéfinies dans l'espace de recherche.
+
+\subsubsection*{Structure de représentation vectorielle}
+L'architecture complète est encodée sous forme d'un vecteur de dimension fixe $n = L \times p$, où $L$ représente le nombre maximal de couches autorisées et $p$ le nombre de paramètres par couche. Cette approche garantit une représentation uniforme permettant les opérations vectorielles nécessaires à l'algorithme.
+
+Chaque sous-vecteur de dimension $p$ encode une couche selon la structure suivante :
+\begin{itemize}
+\item Le premier élément encode le type de couche
+\item Les éléments suivants encodent les paramètres spécifiques selon le type
+\end{itemize}
+
+Pour les couches convolutionnelles, les paramètres incluent le nombre de filtres, la taille du noyau de convolution et le pas de convolution. Les couches de pooling sont caractérisées par la taille du noyau et le pas de pooling. Les couches entièrement connectées sont définies par leur taille et leur fonction d'activation.
+
+\subsubsection{Opérations dans l'espace vectoriel}
+
+\subsubsection*{Métrique de distance}
+La distance entre deux architectures est calculée dans l'espace euclidien par la norme $L_2$ :
+\begin{equation}
+\mathbf{r}_{i,j} = ||\mathbf{x}_i - \mathbf{x}_j||_2 = \sqrt{\sum_{k=1}^{n} (x_{i,k} - x_{j,k})^2}
+\end{equation}
+
+Cette métrique permet de quantifier la similarité structurelle entre les architectures et guide le processus d'attraction dans l'algorithme Firefly.
+
+\subsubsection*{Attractivités entre deux architecture}
+L'attractivité entre deux architectures distante de $\mathbf{r}$ est calculé par : 
+\begin{equation}
+     \beta(r) = \frac{\beta_0}{1+\gamma r^2}
+\end{equation}
+
+Où $\beta_0$ est l'attractivité de base(à distance zéro) et $\gamma$ est un coefficient de l'absorption de la lumière
+
+\subsubsection*{Déplacement des lucioles}
+Le mouvement d'une luciole $i$ vers une luciole plus brillante $j$ s'effectue selon l'équation de mise à jour :
+\begin{equation} \label{deplacementLuciole}
+\mathbf{x}_i^{t+1} = \mathbf{x}_i^t + \beta(r_{ij})(\mathbf{x}_j^t - \mathbf{x}_i^t) + \alpha \boldsymbol{\epsilon}^t
+\end{equation}
+
+où $\boldsymbol{\epsilon}^t$ est un vecteur aléatoire introduisant une composante stochastique nécessaire à l'exploration de l'espace de recherche et $\alpha$ est un paramètre de contrôle.
+
+\subsubsection{Équilibre exploitation-exploration}
+L'algorithme Firefly original présente des limitations importantes concernant l'équilibre entre exploration et exploitation de l'espace de recherche. Comme observé par Bacanin et al. \cite{bacanin2020optimizing}, la version classique de l'algorithme souffre d'une convergence prématurée vers des optima locaux, particulièrement dans des espaces de recherche complexes tels que l'optimisation d'hyperparamètres de réseaux de neurones convolutionnels.
+
+\subsubsection*{Problématique de la convergence prématurée}
+Dans sa formulation originale, l'algorithme Firefly manque d'un mécanisme efficace pour maintenir la diversité de la population au cours des itérations. Les lucioles ont tendance à converger rapidement vers les meilleures solutions trouvées, réduisant ainsi la capacité d'exploration de nouvelles régions prometteuses de l'espace de recherche. Cette limitation est particulièrement critique dans l'optimisation d'architectures neuronales, où l'espace de recherche présente de multiples optima locaux.
+
+\subsubsection*{Mécanisme d'amélioration proposé}
+Pour remédier à cette limitation, nous proposons une extension de l'algorithme Firefly basée sur les travaux de Bacanin et al. \cite{bacanin2020optimizing}. L'amélioration consiste à introduire un mécanisme probabiliste qui alterne entre deux stratégies de déplacement :
+\begin{enumerate}
+\item \textbf{Déplacement classique} : Application de l'équation\ref{deplacementLuciole} de mouvement standard de l'algorithme Firefly
+\item \textbf{Déplacement par distribution normale} : Utilisation d'une distribution normale multivariée pour générer des perturbations aléatoires
+\end{enumerate}
+
+\subsubsection*{Formulation mathématique}
+Le mécanisme de déplacement hybride s'exprime comme suit :
+\begin{equation}
+\mathbf{x}_i^{t+1} = \begin{cases}
+\mathbf{x}i^t + \beta(r_{i,j})(\mathbf{x}_j^t - \mathbf{x}_i^t) + \alpha \boldsymbol{\epsilon}^t & \text{avec probabilité } (1-p) \\
+\mathbf{x}i^t + \beta(r_{i,j})(\mathbf{x}_j^t - \mathbf{x}_i^t) + \mathcal{N}(\mathbf{0}, \sigma^2\mathbf{I}) & \text{avec probabilité } p
+\end{cases}
+\end{equation}
+où $p$ est la probabilité d'utiliser la distribution normale, $\mathcal{N}(\mathbf{0}, \sigma^2\mathbf{I})$ représente une distribution normale multivariée centrée avec une matrice de covariance diagonale, et $\sigma$ contrôle l'amplitude des perturbations.
+
+\subsubsection*{Adaptation dynamique des paramètres}
+Pour optimiser l'équilibre exploration-exploitation, les paramètres de l'algorithme sont adaptés dynamiquement au cours des itérations :
+\begin{align}
+\alpha^{(t)} &= \alpha_0 \times (0.97)^t \\
+\sigma^{(t)} &= \sigma_0 \times \left(1 - \frac{t}{10 \times T}\right)
+\end{align}
+où $t$ représente l'itération courante, $T$ le nombre total d'itérations, $\alpha_0$ et $\sigma_0$ les valeurs initiales des paramètres.
+Cette adaptation permet une exploration intensive en début d'optimisation (valeurs élevées de $\alpha$ et $\sigma$) et une exploitation plus ciblée en fin de processus (valeurs réduites).
+
+\subsubsection{Gestion des contraintes discrètes}
+
+\subsubsection*{Problème de la continuité}
+L'application directe de l'équation de mouvement génère des valeurs réelles, alors que l'espace de recherche architectural est intrinsèquement discret. Cette incompatibilité nécessite des mécanismes de conversion adaptés.
+
+\subsubsection*{Discrétisation stochastique}
+La conversion des valeurs réelles vers l'espace discret s'effectue par un processus d'arrondi probabiliste. Cette approche préserve la diversité en évitant un biais systématique vers les valeurs entières inférieures ou supérieures.
+
+\subsubsection*{Validation des contraintes}
+Après chaque opération de mouvement, la validité de l'architecture résultante doit être vérifiée. Cette validation assure que :
+\begin{itemize}
+\item Les indices de types de couches respectent l'intervalle autorisé
+\item Les paramètres de chaque couche sont dans leur domaine de définition
+\item L'architecture résultante est physiquement réalisable
+\end{itemize}
+
+\subsubsection{Algorithme proposé}
+L'algorithme \ref{alg:enhanced_firefly} présente le pseudo-code de notre implémentation de l'algorithme Firefly amélioré :
+
+\begin{algorithm}[H]
+\caption{Algorithme Firefly pour l'optimisation d'architectures CNN}
+\label{alg:enhanced_firefly}
+\begin{algorithmic}[1]
+\REQUIRE $N$: taille population, $T$: nb itérations, $\alpha_0, \beta_0, \gamma, \sigma_0, p$: paramètres
+\ENSURE Meilleure architecture
+
+\STATE $P_0 \leftarrow$ Générer $N$ architectures aléatoires
+\STATE $\text{fitness}(P_0) \leftarrow$ Évaluer $P_0$ en parallèle
+
+\FOR{$t = 1$ \TO $T$}
+    \STATE $\alpha^{(t)} \leftarrow \alpha_0 \times (0.97)^t$
+    \STATE $\sigma^{(t)} \leftarrow \sigma_0 \times \left(1 - \frac{t}{10T}\right)$
+    \STATE Trier $P_{t-1}$ par fitness décroissante
+    \STATE $P_{\text{new}} \leftarrow \emptyset$
+    
+    \WHILE{$|P_{\text{new}}| < N$}
+        \FOR{chaque luciole $x_i$ dans $P_{t-1}$}
+            \FOR{chaque luciole plus brillante $x_j$}
+                \STATE $x_i^{\text{new}} \leftarrow x_i + \beta(||x_i - x_j||_2) \times (x_j - x_i) + \alpha^{(t)} \epsilon$
+                \IF{$\text{random}() \leq p$}
+                    \STATE $x_i^{\text{new}} \leftarrow x_i^{\text{new}} + \mathcal{N}(\mathbf{0}, (\sigma^{(t)})^2\mathbf{I})$
+                \ENDIF
+                \STATE $x_i^{\text{new}} \leftarrow$ Discrétiser et valider$(x_i^{\text{new}})$
+                \STATE \textbf{break}
+            \ENDFOR
+            \IF{architecture valide ET unique}
+                \STATE $P_{\text{new}} \leftarrow P_{\text{new}} \cup \{x_i^{\text{new}}\}$
+            \ENDIF
+        \ENDFOR
+    \ENDWHILE
+    
+    \STATE $\text{fitness}(P_{\text{new}}) \leftarrow$ Évaluer $P_{\text{new}}$ en parallèle
+    \STATE $P_t \leftarrow$ Sélectionner les $N$ meilleures de $P_{t-1} \cup P_{\text{new}}$
+\ENDFOR
+
+\RETURN Meilleure architecture trouvée
+\end{algorithmic}
+\end{algorithm}
